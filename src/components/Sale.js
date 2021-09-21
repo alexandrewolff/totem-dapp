@@ -31,6 +31,87 @@ const Sale = () => {
         },
     };
 
+    console.log("load");
+
+    useEffect(() => {
+        if (provider?.on) {
+            provider.on("accountsChanged", (accounts) => {
+                console.log("accountsChanged event");
+                setAccount(accounts[0]);
+            });
+            provider.on("chainChanged", (accounts) => {
+                console.log("chainChanged event");
+
+                setAccount(accounts[0]);
+            });
+            provider.on("disconnect", async () => {
+                console.log("disconnect event");
+
+                try {
+                    await web3Modal.clearCachedProvider();
+                } catch (err) {
+                    console.log("Error while clearing provider", err);
+                }
+
+                let newProvider;
+                if (config.network === "mainnet") {
+                    newProvider = config.bsc_mainnet_endpoint;
+                } else if (config.network === "testnet") {
+                    newProvider = config.bsc_testnet_endpoint;
+                } else {
+                    throw new Error("Invalid network configuration");
+                }
+
+                const web3Provider = new ethers.providers.JsonRpcProvider(
+                    newProvider
+                );
+                console.log("disconnect from event");
+                setProvider(newProvider);
+                setWeb3Provider(web3Provider);
+                setAccount("");
+            });
+        }
+
+        return () => {
+            if (provider?.removeListener) {
+                provider.removeListener("accountsChanged", (accounts) => {
+                    console.log("un accountsChanged event");
+                    setAccount(accounts[0]);
+                });
+                provider.removeListener("chainChanged", (accounts) => {
+                    console.log("un chainChanged event");
+                    setAccount(accounts[0]);
+                });
+                provider.removeListener("disconnect", async () => {
+                    console.log("disconnect event");
+
+                    try {
+                        await web3Modal.clearCachedProvider();
+                    } catch (err) {
+                        console.log("Error while clearing provider", err);
+                    }
+
+                    let newProvider;
+                    if (config.network === "mainnet") {
+                        newProvider = config.bsc_mainnet_endpoint;
+                    } else if (config.network === "testnet") {
+                        newProvider = config.bsc_testnet_endpoint;
+                    } else {
+                        throw new Error("Invalid network configuration");
+                    }
+
+                    const web3Provider = new ethers.providers.JsonRpcProvider(
+                        newProvider
+                    );
+                    console.log("disconnect from event");
+                    setProvider(newProvider);
+                    setWeb3Provider(web3Provider);
+                    setAccount("");
+                });
+            }
+        };
+    }, [provider]);
+
     useEffect(() => {
         const init = async () => {
             let provider;
@@ -122,8 +203,6 @@ const Sale = () => {
         const signer = web3Provider.getSigner();
         const account = await signer.getAddress();
 
-        console.log(account);
-
         setProvider(provider);
         setWeb3Provider(web3Provider);
         setSigner(signer);
@@ -137,19 +216,14 @@ const Sale = () => {
             console.log("Error while clearing provider", err);
         }
 
-        if (
-            provider &&
-            provider.close &&
-            typeof provider.close === "function"
-        ) {
+        if (provider?.close && typeof provider.close === "function") {
             try {
                 await provider.close();
             } catch (err) {
                 console.log("Error while closing", err);
             }
         } else if (
-            provider &&
-            provider.disconnect &&
+            provider?.disconnect &&
             typeof provider.disconnect === "function"
         ) {
             try {
@@ -167,8 +241,9 @@ const Sale = () => {
         } else {
             throw new Error("Invalid network configuration");
         }
-        const web3Provider = new ethers.providers.JsonRpcProvider(newProvider);
 
+        const web3Provider = new ethers.providers.JsonRpcProvider(newProvider);
+        console.log("disconnect");
         setProvider(newProvider);
         setWeb3Provider(web3Provider);
         setAccount("");
