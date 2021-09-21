@@ -5,7 +5,6 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 
 import config from "../config.json";
 import abi from "../abi.json";
-import { logDOM } from "@testing-library/dom";
 
 const Sale = () => {
     const [provider, setProvider] = useState(undefined);
@@ -15,6 +14,10 @@ const Sale = () => {
     const [saleSettings, setSaleSettings] = useState(undefined);
     const [tokensAtSale, setTokensAtSale] = useState(undefined);
     const [tokensSold, setTokensSold] = useState(undefined);
+    const [signer, setSigner] = useState("");
+    const [account, setAccount] = useState("");
+    const [web3Provider, setWeb3Provider] = useState(undefined);
+    const [network, setNetwork] = useState("");
 
     const providerOptions = {
         walletconnect: {
@@ -30,34 +33,56 @@ const Sale = () => {
 
     useEffect(() => {
         const init = async () => {
-            let endpoint;
+            let provider;
+            let network;
             if (config.network === "mainnet") {
-                endpoint = config.bsc_mainnet_endpoint;
+                provider = config.bsc_mainnet_endpoint;
+                network = "binance";
             } else if (config.network === "testnet") {
-                endpoint = config.bsc_testnet_endpoint;
+                provider = config.bsc_testnet_endpoint;
+                network = "binance-testnet";
             } else {
                 throw new Error("Invalid network configuration");
             }
 
-            const provider = new ethers.providers.JsonRpcProvider(endpoint);
+            const web3Modal = new Web3Modal({
+                network,
+                cacheProvider: true,
+                providerOptions,
+            });
+
+            const web3Provider = new ethers.providers.JsonRpcProvider(provider);
+
+            setNetwork(network);
+            setWeb3Modal(web3Modal);
+            setProvider(provider);
+            setWeb3Provider(web3Provider);
+        };
+        init();
+    }, []);
+
+    useEffect(() => {
+        const init = async () => {
+            if (!web3Provider) return;
+
             const crowdsaleContract = new ethers.Contract(
                 config.crowdsaleAddress,
                 abi.crowdsale,
-                provider
+                web3Provider
             );
 
             let saleSettings;
             try {
                 saleSettings = await crowdsaleContract.getSaleSettings();
             } catch (err) {
-                console.error(err);
+                console.error("Sale settings fetch error: ", err);
                 return;
             }
 
             const tokenContract = new ethers.Contract(
                 saleSettings.token,
                 abi.erc20,
-                provider
+                web3Provider
             );
 
             let tokensAtSale;
@@ -66,16 +91,16 @@ const Sale = () => {
                     config.crowdsaleAddress
                 );
             } catch (err) {
-                console.error(err);
+                console.error("tokensAtSale: ", err);
             }
+
             let tokensSold;
             try {
                 tokensSold = await crowdsaleContract.getSoldAmount();
             } catch (err) {
-                console.error(err);
+                console.error("tokensSold: ", err);
             }
 
-            setProvider(provider);
             setCrowdsaleContract(crowdsaleContract);
             setTokenContract(tokenContract);
             setSaleSettings(saleSettings);
@@ -83,33 +108,73 @@ const Sale = () => {
             setTokensSold(tokensSold);
         };
         init();
-    }, []);
+    }, [web3Provider]);
 
     const connectWalletHandler = async () => {
-        let network;
-        if (config.network === "mainnet") {
-            network = "binance";
-        } else if (config.network === "testnet") {
-            network = "binance_testnet";
-        }
-        const web3Modal = new Web3Modal({
-            network,
-            cacheProvider: false,
-            providerOptions,
-        });
-        setWeb3Modal(web3Modal);
-
-        let web3ModalProvider;
+        let provider;
         try {
-            web3ModalProvider = await web3Modal.connect();
+            provider = await web3Modal.connect();
         } catch (err) {
             console.error("Error while connecting", err);
+            return;
         }
-        const provider = new ethers.providers.Web3Provider(web3ModalProvider);
+        const web3Provider = new ethers.providers.Web3Provider(provider);
+        const signer = web3Provider.getSigner();
+        const account = await signer.getAddress();
+
+        console.log(account);
+
         setProvider(provider);
+        setWeb3Provider(web3Provider);
+        setSigner(signer);
+        setAccount(account);
     };
 
-    let saleInfo = "Loading...";
+    const disconnectWalletHandler = async () => {
+        try {
+            await web3Modal.clearCachedProvider();
+        } catch (err) {
+            console.log("Error while clearing provider", err);
+        }
+
+        if (
+            provider &&
+            provider.close &&
+            typeof provider.close === "function"
+        ) {
+            try {
+                await provider.close();
+            } catch (err) {
+                console.log("Error while closing", err);
+            }
+        } else if (
+            provider &&
+            provider.disconnect &&
+            typeof provider.disconnect === "function"
+        ) {
+            try {
+                await provider.disconnect();
+            } catch (err) {
+                console.log("Error while disconnecting", err);
+            }
+        }
+
+        let newProvider;
+        if (config.network === "mainnet") {
+            newProvider = config.bsc_mainnet_endpoint;
+        } else if (config.network === "testnet") {
+            newProvider = config.bsc_testnet_endpoint;
+        } else {
+            throw new Error("Invalid network configuration");
+        }
+        const web3Provider = new ethers.providers.JsonRpcProvider(newProvider);
+
+        setProvider(newProvider);
+        setWeb3Provider(web3Provider);
+        setAccount("");
+    };
+
+    let saleInfo = <p>Loading...</p>;
     if (saleSettings) {
         saleInfo = (
             <div>
@@ -142,11 +207,25 @@ const Sale = () => {
         );
     }
 
+    let walletConnection;
+    if (account) {
+        walletConnection = (
+            <>
+                <p>Account connected: {account}</p>
+                <button onClick={disconnectWalletHandler}>Disconnect</button>
+            </>
+        );
+    } else {
+        walletConnection = (
+            <button onClick={connectWalletHandler}>Connect Wallet</button>
+        );
+    }
+
     return (
         <div>
             <h1>Totem Token Sale</h1>
             {saleInfo}
-            <button onClick={connectWalletHandler}>Connect Wallet</button>
+            {walletConnection}
         </div>
     );
 };
