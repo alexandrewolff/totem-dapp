@@ -18,6 +18,7 @@ const Sale = () => {
     const [account, setAccount] = useState("");
     const [web3Provider, setWeb3Provider] = useState(undefined);
     const [network, setNetwork] = useState("");
+    const [networkId, setNetworkId] = useState(null);
 
     const providerOptions = {
         walletconnect: {
@@ -31,22 +32,25 @@ const Sale = () => {
         },
     };
 
-    console.log("load");
+    useEffect(() => {
+        const init = async () => {
+            if (web3Provider) {
+                const newtorkId = await web3Provider.getNetwork();
+                setNetworkId(newtorkId.chainId);
+            }
+        };
+        init();
+    }, [web3Provider]);
 
     useEffect(() => {
         if (provider?.on) {
             provider.on("accountsChanged", (accounts) => {
-                console.log("accountsChanged event");
                 setAccount(accounts[0]);
             });
-            provider.on("chainChanged", (accounts) => {
-                console.log("chainChanged event");
-
-                setAccount(accounts[0]);
+            provider.on("chainChanged", (chainId) => {
+                setNetworkId(parseInt(chainId, 16));
             });
             provider.on("disconnect", async () => {
-                console.log("disconnect event");
-
                 try {
                     await web3Modal.clearCachedProvider();
                 } catch (err) {
@@ -65,7 +69,7 @@ const Sale = () => {
                 const web3Provider = new ethers.providers.JsonRpcProvider(
                     newProvider
                 );
-                console.log("disconnect from event");
+
                 setProvider(newProvider);
                 setWeb3Provider(web3Provider);
                 setAccount("");
@@ -243,7 +247,7 @@ const Sale = () => {
         }
 
         const web3Provider = new ethers.providers.JsonRpcProvider(newProvider);
-        console.log("disconnect");
+
         setProvider(newProvider);
         setWeb3Provider(web3Provider);
         setAccount("");
@@ -282,11 +286,21 @@ const Sale = () => {
         );
     }
 
+    let chainAlert = false;
+    if (
+        (config.network === "mainnet" && networkId !== 56) ||
+        (config.network === "testnet" && networkId !== 97)
+    )
+        chainAlert = true;
+
     let walletConnection;
     if (account) {
         walletConnection = (
             <>
                 <p>Account connected: {account}</p>
+                {chainAlert ? (
+                    <p>!Please swith to Binance Smart Chain!</p>
+                ) : null}
                 <button onClick={disconnectWalletHandler}>Disconnect</button>
             </>
         );
