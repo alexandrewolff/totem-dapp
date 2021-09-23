@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
-import { injected, walletconnect } from "./wallets/connectors";
 import { ethers } from "ethers";
+
+import WalletConnection from "./WalletConnection";
 
 import config from "../config.json";
 import abi from "../abi.json";
@@ -16,14 +17,6 @@ const ReferralRegister = () => {
         error,
         library: provider,
     } = useWeb3React();
-
-    const connect = async (connector) => {
-        try {
-            await activate(connector);
-        } catch (err) {
-            console.error(err);
-        }
-    };
 
     const registerHandler = async () => {
         const contract = getContract();
@@ -67,33 +60,6 @@ const ReferralRegister = () => {
         await tx.wait();
     };
 
-    let walletConnection;
-    const isUnsupportedChainIdError = error instanceof UnsupportedChainIdError;
-    if (active || isUnsupportedChainIdError) {
-        walletConnection = (
-            <div>
-                {account ? <p>Account: {account}</p> : null}
-                {isUnsupportedChainIdError ? (
-                    <p>Please switch to Binance Smart Chain</p>
-                ) : null}
-                <button onClick={deactivate}>Disconnect Wallet</button>
-            </div>
-        );
-    } else {
-        walletConnection = (
-            <div>
-                {window.ethereum ? (
-                    <button onClick={() => connect(injected)}>
-                        Connect Metamask
-                    </button>
-                ) : null}
-                <button onClick={() => connect(walletconnect)}>
-                    Connect WalletConnect
-                </button>
-            </div>
-        );
-    }
-
     let register;
     if (active) {
         register = (
@@ -107,7 +73,7 @@ const ReferralRegister = () => {
     return (
         <div>
             <h1>Referral Register</h1>
-            {walletConnection}
+            <WalletConnection />
             {register}
         </div>
     );

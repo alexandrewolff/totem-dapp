@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from "react";
+import { useWeb3React } from "@web3-react/core";
 import { ethers } from "ethers";
-import Web3Modal from "web3modal";
-import WalletConnectProvider from "@walletconnect/web3-provider";
+
+import WalletConnection from "./WalletConnection";
 
 import config from "../config.json";
 import abi from "../abi.json";
 
 const Sale = () => {
-    const [provider, setProvider] = useState(undefined);
-    const [web3Modal, setWeb3Modal] = useState(undefined);
-    const [crowdsaleContract, setCrowdsaleContract] = useState(undefined);
-    const [tokenContract, setTokenContract] = useState(undefined);
     const [saleSettings, setSaleSettings] = useState(undefined);
     const [tokensAtSale, setTokensAtSale] = useState(undefined);
     const [tokensSold, setTokensSold] = useState(undefined);
-    const [signer, setSigner] = useState("");
-    const [account, setAccount] = useState("");
-    const [web3Provider, setWeb3Provider] = useState(undefined);
-    const [network, setNetwork] = useState("");
-    const [networkId, setNetworkId] = useState(null);
+    const {
+        activate,
+        deactivate,
+        account,
+        active,
+        error,
+        library: provider,
+    } = useWeb3React();
 
     // useEffect(() => {
     //     const activateNetwork = async () => {
@@ -37,238 +37,238 @@ const Sale = () => {
     //     fetchContractData();
     // }, []);
 
-    const providerOptions = {
-        walletconnect: {
-            package: WalletConnectProvider,
-            options: {
-                rpc: {
-                    56: config.bsc_mainnet_endpoint,
-                    97: config.bsc_testnet_endpoint,
-                },
-            },
-        },
-    };
+    // const providerOptions = {
+    //     walletconnect: {
+    //         package: WalletConnectProvider,
+    //         options: {
+    //             rpc: {
+    //                 56: config.bsc_mainnet_endpoint,
+    //                 97: config.bsc_testnet_endpoint,
+    //             },
+    //         },
+    //     },
+    // };
 
-    useEffect(() => {
-        const init = async () => {
-            if (web3Provider) {
-                const newtorkId = await web3Provider.getNetwork();
-                setNetworkId(newtorkId.chainId);
-            }
-        };
-        init();
-    }, [web3Provider]);
+    // useEffect(() => {
+    //     const init = async () => {
+    //         if (web3Provider) {
+    //             const newtorkId = await web3Provider.getNetwork();
+    //             setNetworkId(newtorkId.chainId);
+    //         }
+    //     };
+    //     init();
+    // }, [web3Provider]);
 
-    useEffect(() => {
-        if (provider?.on) {
-            provider.on("accountsChanged", (accounts) => {
-                setAccount(accounts[0]);
-            });
-            provider.on("chainChanged", (chainId) => {
-                setNetworkId(parseInt(chainId, 16));
-            });
-            provider.on("disconnect", async () => {
-                try {
-                    await web3Modal.clearCachedProvider();
-                } catch (err) {
-                    console.log("Error while clearing provider", err);
-                }
+    // useEffect(() => {
+    //     if (provider?.on) {
+    //         provider.on("accountsChanged", (accounts) => {
+    //             setAccount(accounts[0]);
+    //         });
+    //         provider.on("chainChanged", (chainId) => {
+    //             setNetworkId(parseInt(chainId, 16));
+    //         });
+    //         provider.on("disconnect", async () => {
+    //             try {
+    //                 await web3Modal.clearCachedProvider();
+    //             } catch (err) {
+    //                 console.log("Error while clearing provider", err);
+    //             }
 
-                let newProvider;
-                if (config.network === "mainnet") {
-                    newProvider = config.bsc_mainnet_endpoint;
-                } else if (config.network === "testnet") {
-                    newProvider = config.bsc_testnet_endpoint;
-                } else {
-                    throw new Error("Invalid network configuration");
-                }
+    //             let newProvider;
+    //             if (config.network === "mainnet") {
+    //                 newProvider = config.bsc_mainnet_endpoint;
+    //             } else if (config.network === "testnet") {
+    //                 newProvider = config.bsc_testnet_endpoint;
+    //             } else {
+    //                 throw new Error("Invalid network configuration");
+    //             }
 
-                const web3Provider = new ethers.providers.JsonRpcProvider(
-                    newProvider
-                );
+    //             const web3Provider = new ethers.providers.JsonRpcProvider(
+    //                 newProvider
+    //             );
 
-                setProvider(newProvider);
-                setWeb3Provider(web3Provider);
-                setAccount("");
-            });
-        }
+    //             setProvider(newProvider);
+    //             setWeb3Provider(web3Provider);
+    //             setAccount("");
+    //         });
+    //     }
 
-        return () => {
-            if (provider?.removeListener) {
-                provider.removeListener("accountsChanged", (accounts) => {
-                    console.log("un accountsChanged event");
-                    setAccount(accounts[0]);
-                });
-                provider.removeListener("chainChanged", (accounts) => {
-                    console.log("un chainChanged event");
-                    setAccount(accounts[0]);
-                });
-                provider.removeListener("disconnect", async () => {
-                    console.log("disconnect event");
+    //     return () => {
+    //         if (provider?.removeListener) {
+    //             provider.removeListener("accountsChanged", (accounts) => {
+    //                 console.log("un accountsChanged event");
+    //                 setAccount(accounts[0]);
+    //             });
+    //             provider.removeListener("chainChanged", (accounts) => {
+    //                 console.log("un chainChanged event");
+    //                 setAccount(accounts[0]);
+    //             });
+    //             provider.removeListener("disconnect", async () => {
+    //                 console.log("disconnect event");
 
-                    try {
-                        await web3Modal.clearCachedProvider();
-                    } catch (err) {
-                        console.log("Error while clearing provider", err);
-                    }
+    //                 try {
+    //                     await web3Modal.clearCachedProvider();
+    //                 } catch (err) {
+    //                     console.log("Error while clearing provider", err);
+    //                 }
 
-                    let newProvider;
-                    if (config.network === "mainnet") {
-                        newProvider = config.bsc_mainnet_endpoint;
-                    } else if (config.network === "testnet") {
-                        newProvider = config.bsc_testnet_endpoint;
-                    } else {
-                        throw new Error("Invalid network configuration");
-                    }
+    //                 let newProvider;
+    //                 if (config.network === "mainnet") {
+    //                     newProvider = config.bsc_mainnet_endpoint;
+    //                 } else if (config.network === "testnet") {
+    //                     newProvider = config.bsc_testnet_endpoint;
+    //                 } else {
+    //                     throw new Error("Invalid network configuration");
+    //                 }
 
-                    const web3Provider = new ethers.providers.JsonRpcProvider(
-                        newProvider
-                    );
-                    console.log("disconnect from event");
-                    setProvider(newProvider);
-                    setWeb3Provider(web3Provider);
-                    setAccount("");
-                });
-            }
-        };
-    }, [provider]);
+    //                 const web3Provider = new ethers.providers.JsonRpcProvider(
+    //                     newProvider
+    //                 );
+    //                 console.log("disconnect from event");
+    //                 setProvider(newProvider);
+    //                 setWeb3Provider(web3Provider);
+    //                 setAccount("");
+    //             });
+    //         }
+    //     };
+    // }, [provider]);
 
-    useEffect(() => {
-        const init = async () => {
-            let provider;
-            let network;
-            if (config.network === "mainnet") {
-                provider = config.bsc_mainnet_endpoint;
-                network = "binance";
-            } else if (config.network === "testnet") {
-                provider = config.bsc_testnet_endpoint;
-                network = "binance-testnet";
-            } else {
-                throw new Error("Invalid network configuration");
-            }
+    // useEffect(() => {
+    //     const init = async () => {
+    //         let provider;
+    //         let network;
+    //         if (config.network === "mainnet") {
+    //             provider = config.bsc_mainnet_endpoint;
+    //             network = "binance";
+    //         } else if (config.network === "testnet") {
+    //             provider = config.bsc_testnet_endpoint;
+    //             network = "binance-testnet";
+    //         } else {
+    //             throw new Error("Invalid network configuration");
+    //         }
 
-            const web3Modal = new Web3Modal({
-                network,
-                cacheProvider: true,
-                providerOptions,
-            });
+    //         const web3Modal = new Web3Modal({
+    //             network,
+    //             cacheProvider: true,
+    //             providerOptions,
+    //         });
 
-            const web3Provider = new ethers.providers.JsonRpcProvider(provider);
+    //         const web3Provider = new ethers.providers.JsonRpcProvider(provider);
 
-            setNetwork(network);
-            setWeb3Modal(web3Modal);
-            setProvider(provider);
-            setWeb3Provider(web3Provider);
-        };
-        init();
-    }, []);
+    //         setNetwork(network);
+    //         setWeb3Modal(web3Modal);
+    //         setProvider(provider);
+    //         setWeb3Provider(web3Provider);
+    //     };
+    //     init();
+    // }, []);
 
-    useEffect(() => {
-        const init = async () => {
-            if (!web3Provider) return;
+    // useEffect(() => {
+    //     const init = async () => {
+    //         if (!web3Provider) return;
 
-            const crowdsaleContract = new ethers.Contract(
-                config.crowdsaleAddress,
-                abi.crowdsale,
-                web3Provider
-            );
+    //         const crowdsaleContract = new ethers.Contract(
+    //             config.crowdsaleAddress,
+    //             abi.crowdsale,
+    //             web3Provider
+    //         );
 
-            let saleSettings;
-            try {
-                saleSettings = await crowdsaleContract.getSaleSettings();
-            } catch (err) {
-                console.error("Sale settings fetch error: ", err);
-                return;
-            }
+    //         let saleSettings;
+    //         try {
+    //             saleSettings = await crowdsaleContract.getSaleSettings();
+    //         } catch (err) {
+    //             console.error("Sale settings fetch error: ", err);
+    //             return;
+    //         }
 
-            const tokenContract = new ethers.Contract(
-                saleSettings.token,
-                abi.erc20,
-                web3Provider
-            );
+    //         const tokenContract = new ethers.Contract(
+    //             saleSettings.token,
+    //             abi.erc20,
+    //             web3Provider
+    //         );
 
-            let tokensAtSale;
-            try {
-                tokensAtSale = await tokenContract.balanceOf(
-                    config.crowdsaleAddress
-                );
-            } catch (err) {
-                console.error("tokensAtSale: ", err);
-            }
+    //         let tokensAtSale;
+    //         try {
+    //             tokensAtSale = await tokenContract.balanceOf(
+    //                 config.crowdsaleAddress
+    //             );
+    //         } catch (err) {
+    //             console.error("tokensAtSale: ", err);
+    //         }
 
-            let tokensSold;
-            try {
-                tokensSold = await crowdsaleContract.getSoldAmount();
-            } catch (err) {
-                console.error("tokensSold: ", err);
-            }
+    //         let tokensSold;
+    //         try {
+    //             tokensSold = await crowdsaleContract.getSoldAmount();
+    //         } catch (err) {
+    //             console.error("tokensSold: ", err);
+    //         }
 
-            setCrowdsaleContract(crowdsaleContract);
-            setTokenContract(tokenContract);
-            setSaleSettings(saleSettings);
-            setTokensAtSale(tokensAtSale);
-            setTokensSold(tokensSold);
-        };
-        init();
-    }, [web3Provider]);
+    //         setCrowdsaleContract(crowdsaleContract);
+    //         setTokenContract(tokenContract);
+    //         setSaleSettings(saleSettings);
+    //         setTokensAtSale(tokensAtSale);
+    //         setTokensSold(tokensSold);
+    //     };
+    //     init();
+    // }, [web3Provider]);
 
-    const connectWalletHandler = async () => {
-        let provider;
-        try {
-            provider = await web3Modal.connect();
-        } catch (err) {
-            console.error("Error while connecting", err);
-            return;
-        }
-        const web3Provider = new ethers.providers.Web3Provider(provider);
-        const signer = web3Provider.getSigner();
-        const account = await signer.getAddress();
+    // const connectWalletHandler = async () => {
+    //     let provider;
+    //     try {
+    //         provider = await web3Modal.connect();
+    //     } catch (err) {
+    //         console.error("Error while connecting", err);
+    //         return;
+    //     }
+    //     const web3Provider = new ethers.providers.Web3Provider(provider);
+    //     const signer = web3Provider.getSigner();
+    //     const account = await signer.getAddress();
 
-        setProvider(provider);
-        setWeb3Provider(web3Provider);
-        setSigner(signer);
-        setAccount(account);
-    };
+    //     setProvider(provider);
+    //     setWeb3Provider(web3Provider);
+    //     setSigner(signer);
+    //     setAccount(account);
+    // };
 
-    const disconnectWalletHandler = async () => {
-        try {
-            await web3Modal.clearCachedProvider();
-        } catch (err) {
-            console.log("Error while clearing provider", err);
-        }
+    // const disconnectWalletHandler = async () => {
+    //     try {
+    //         await web3Modal.clearCachedProvider();
+    //     } catch (err) {
+    //         console.log("Error while clearing provider", err);
+    //     }
 
-        if (provider?.close && typeof provider.close === "function") {
-            try {
-                await provider.close();
-            } catch (err) {
-                console.log("Error while closing", err);
-            }
-        } else if (
-            provider?.disconnect &&
-            typeof provider.disconnect === "function"
-        ) {
-            try {
-                await provider.disconnect();
-            } catch (err) {
-                console.log("Error while disconnecting", err);
-            }
-        }
+    //     if (provider?.close && typeof provider.close === "function") {
+    //         try {
+    //             await provider.close();
+    //         } catch (err) {
+    //             console.log("Error while closing", err);
+    //         }
+    //     } else if (
+    //         provider?.disconnect &&
+    //         typeof provider.disconnect === "function"
+    //     ) {
+    //         try {
+    //             await provider.disconnect();
+    //         } catch (err) {
+    //             console.log("Error while disconnecting", err);
+    //         }
+    //     }
 
-        let newProvider;
-        if (config.network === "mainnet") {
-            newProvider = config.bsc_mainnet_endpoint;
-        } else if (config.network === "testnet") {
-            newProvider = config.bsc_testnet_endpoint;
-        } else {
-            throw new Error("Invalid network configuration");
-        }
+    //     let newProvider;
+    //     if (config.network === "mainnet") {
+    //         newProvider = config.bsc_mainnet_endpoint;
+    //     } else if (config.network === "testnet") {
+    //         newProvider = config.bsc_testnet_endpoint;
+    //     } else {
+    //         throw new Error("Invalid network configuration");
+    //     }
 
-        const web3Provider = new ethers.providers.JsonRpcProvider(newProvider);
+    //     const web3Provider = new ethers.providers.JsonRpcProvider(newProvider);
 
-        setProvider(newProvider);
-        setWeb3Provider(web3Provider);
-        setAccount("");
-    };
+    //     setProvider(newProvider);
+    //     setWeb3Provider(web3Provider);
+    //     setAccount("");
+    // };
 
     let saleInfo = <p>Loading...</p>;
     if (saleSettings) {
@@ -303,35 +303,35 @@ const Sale = () => {
         );
     }
 
-    let chainAlert = false;
-    if (
-        (config.network === "mainnet" && networkId !== 56) ||
-        (config.network === "testnet" && networkId !== 97)
-    )
-        chainAlert = true;
+    // let chainAlert = false;
+    // if (
+    //     (config.network === "mainnet" && networkId !== 56) ||
+    //     (config.network === "testnet" && networkId !== 97)
+    // )
+    //     chainAlert = true;
 
-    let walletConnection;
-    if (account) {
-        walletConnection = (
-            <>
-                <p>Account connected: {account}</p>
-                {chainAlert ? (
-                    <p>!Please swith to Binance Smart Chain!</p>
-                ) : null}
-                <button onClick={disconnectWalletHandler}>Disconnect</button>
-            </>
-        );
-    } else {
-        walletConnection = (
-            <button onClick={connectWalletHandler}>Connect Wallet</button>
-        );
-    }
+    // let walletConnection;
+    // if (account) {
+    //     walletConnection = (
+    //         <>
+    //             <p>Account connected: {account}</p>
+    //             {chainAlert ? (
+    //                 <p>!Please swith to Binance Smart Chain!</p>
+    //             ) : null}
+    //             <button onClick={disconnectWalletHandler}>Disconnect</button>
+    //         </>
+    //     );
+    // } else {
+    //     walletConnection = (
+    //         <button onClick={connectWalletHandler}>Connect Wallet</button>
+    //     );
+    // }
 
     return (
         <div>
             <h1>Totem Token Sale</h1>
-            {saleInfo}
-            {walletConnection}
+            {/* {saleInfo} */}
+            <WalletConnection />
         </div>
     );
 };
