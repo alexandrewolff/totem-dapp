@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-    useWeb3React,
-    getWeb3ReactContext,
-    UnsupportedChainIdError,
-} from "@web3-react/core";
-import { injected, walletconnect, network } from "./wallets/connectors";
+import React, { useState } from "react";
+import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
+import { injected, walletconnect } from "./wallets/connectors";
 import { ethers } from "ethers";
 
 import config from "../config.json";
@@ -15,12 +11,10 @@ const ReferralRegister = () => {
     const {
         activate,
         deactivate,
-        chainId,
         account,
         active,
         error,
         library: provider,
-        connector,
     } = useWeb3React();
 
     const connect = async (connector) => {
@@ -32,25 +26,23 @@ const ReferralRegister = () => {
     };
 
     const registerHandler = async () => {
+        const contract = getContract();
+        if (await isAlreadyReferral(contract))
+            return displayInfo("Account already registered as referral");
+        await tryRegisterTx(contract);
+    };
+
+    const getContract = () => {
         const signer = provider.getSigner();
-        const contract = new ethers.Contract(
+        return new ethers.Contract(
             config.crowdsaleAddress,
             abi.crowdsale,
             signer
         );
-        const isAlreadyReferral = await contract.isReferral(account);
+    };
 
-        if (isAlreadyReferral)
-            return displayInfo("Account already registered as referral");
-
-        try {
-            const tx = await contract.registerAsReferral();
-            await tx.wait();
-            displayInfo("Account successfully registered as referral");
-        } catch (err) {
-            console.error(err);
-            displayInfo("Transaction failed");
-        }
+    const isAlreadyReferral = async (contract) => {
+        return await contract.isReferral(account);
     };
 
     const displayInfo = (info) => {
@@ -58,6 +50,21 @@ const ReferralRegister = () => {
         setTimeout(() => {
             setInfo("");
         }, 3000);
+    };
+
+    const tryRegisterTx = async (contract) => {
+        try {
+            await sendRegisterTx(contract);
+            displayInfo("Account successfully registered as referral");
+        } catch (err) {
+            console.error(err);
+            displayInfo("Transaction failed");
+        }
+    };
+
+    const sendRegisterTx = async (contract) => {
+        const tx = await contract.registerAsReferral();
+        await tx.wait();
     };
 
     let walletConnection;
