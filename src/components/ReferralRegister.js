@@ -19,13 +19,13 @@ const ReferralRegister = () => {
     } = useWeb3React();
 
     const registerHandler = async () => {
-        const contract = getContract();
+        const contract = getContractWriter();
         if (await isAlreadyReferral(contract))
             return displayInfo("Account already registered as referral");
         await tryRegisterTx(contract);
     };
 
-    const getContract = () => {
+    const getContractWriter = () => {
         const signer = provider.getSigner();
         return new ethers.Contract(
             config.crowdsaleAddress,

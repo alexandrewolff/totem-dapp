@@ -5,6 +5,7 @@ import { network } from "./wallets/connectors";
 import { ethers } from "ethers";
 
 import WalletConnection from "./WalletConnection";
+import SaleInfo from "./SaleInfo";
 
 import config from "../config.json";
 import abi from "../abi.json";
@@ -56,8 +57,10 @@ const Sale = () => {
             setTokensAtSale(tokensAtSale);
             setTokensSold(tokensSold);
         };
-        fetchContractInfo();
-    }, []);
+        if (provider) {
+            fetchContractInfo();
+        }
+    }, [provider]);
 
     const getContractReader = (address, abi) => {
         return new ethers.Contract(address, abi, provider);
@@ -76,48 +79,20 @@ const Sale = () => {
         try {
             return await call();
         } catch (err) {
-            console.error(err);
+            console.error("HERRE", err);
             setTxError("Transaction failed");
         }
     };
 
-    let saleInfo = <p>Loading...</p>;
-    if (saleSettings) {
-        saleInfo = (
-            <div>
-                <p>
-                    Sale start:{" "}
-                    {new Date(
-                        saleSettings.saleStart.toNumber() * 1000
-                    ).toDateString()}
-                </p>
-                <p>
-                    Sale end:{" "}
-                    {new Date(
-                        saleSettings.saleEnd.toNumber() * 1000
-                    ).toDateString()}
-                </p>
-                <p>
-                    Tokens at sale:{" "}
-                    {tokensAtSale
-                        ? ethers.utils.formatEther(tokensAtSale)
-                        : null}
-                </p>
-                <p>
-                    Tokens sold:{" "}
-                    {tokensSold ? ethers.utils.formatEther(tokensSold) : null}
-                </p>
-                <p>
-                    Price per token: {1 / saleSettings.exchangeRate.toNumber()}$
-                </p>
-            </div>
-        );
-    }
-
     return (
         <div>
             <h1>Totem Token Sale</h1>
-            {saleInfo}
+            <SaleInfo
+                saleSettings={saleSettings}
+                tokensAtSale={tokensAtSale}
+                tokensSold={tokensSold}
+                txError={txError}
+            />
             <WalletConnection />
         </div>
     );

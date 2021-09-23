@@ -16,7 +16,7 @@ function App() {
     return (
         <Web3ReactProvider getLibrary={getLibrary}>
             <div className="App">
-                <ReferralRegister />
+                {/* <ReferralRegister /> */}
                 <Sale />
             </div>
         </Web3ReactProvider>
