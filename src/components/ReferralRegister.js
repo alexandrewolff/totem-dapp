@@ -82,9 +82,11 @@ const ReferralRegister = () => {
     } else {
         walletConnection = (
             <div>
-                <button onClick={() => connect(injected)}>
-                    Connect Metamask
-                </button>
+                {window.ethereum ? (
+                    <button onClick={() => connect(injected)}>
+                        Connect Metamask
+                    </button>
+                ) : null}
                 <button onClick={() => connect(walletconnect)}>
                     Connect WalletConnect
                 </button>
