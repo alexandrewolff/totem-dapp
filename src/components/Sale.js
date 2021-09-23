@@ -14,6 +14,7 @@ const Sale = () => {
     const [saleSettings, setSaleSettings] = useState(undefined);
     const [tokensAtSale, setTokensAtSale] = useState(undefined);
     const [tokensSold, setTokensSold] = useState(undefined);
+    const [updateRequired, setUpdateRequired] = useState(true);
     const [txError, setTxError] = useState("");
     const {
         activate,
@@ -53,14 +54,16 @@ const Sale = () => {
             const tokensAtSale = await tryReadTx(() =>
                 tokenContract.balanceOf(config.crowdsaleAddress)
             );
+
             setSaleSettings(saleSettings);
             setTokensAtSale(tokensAtSale);
             setTokensSold(tokensSold);
+            setUpdateRequired(false);
         };
-        if (provider) {
+        if (provider && updateRequired) {
             fetchContractInfo();
         }
-    }, [provider]);
+    }, [provider, updateRequired]);
 
     const getContractReader = (address, abi) => {
         return new ethers.Contract(address, abi, provider);
