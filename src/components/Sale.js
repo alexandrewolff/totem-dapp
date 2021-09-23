@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
+import { network } from "./wallets/connectors";
+
 import { ethers } from "ethers";
 
 import WalletConnection from "./WalletConnection";
@@ -17,17 +19,18 @@ const Sale = () => {
         account,
         active,
         error,
+        connector,
         library: provider,
     } = useWeb3React();
 
-    // useEffect(() => {
-    //     const activateNetwork = async () => {
-    //         await activate(network);
-    //     };
-    //     if (!active) {
-    //         activateNetwork();
-    //     }
-    // }, [active, activate]);
+    useEffect(() => {
+        const activateNetwork = async () => {
+            await activate(network);
+        };
+        if (!active) {
+            activateNetwork();
+        }
+    }, [active, activate]);
 
     // useEffect(() => {
     //     const fetchContractData = async () => {
