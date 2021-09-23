@@ -87,7 +87,7 @@ const Sale = () => {
         }
     };
 
-    const now = Math.floor(new Date().getTime / 1000);
+    const now = Math.floor(new Date() / 1000);
 
     let display;
     if (!saleSettings) {
