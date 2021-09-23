@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useWeb3React } from "@web3-react/core";
+import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
 import { network } from "./wallets/connectors";
 
 import { ethers } from "ethers";
@@ -30,7 +30,7 @@ const Sale = () => {
         const activateNetwork = async () => {
             await activate(network);
         };
-        if (!active) {
+        if (!active && !error) {
             activateNetwork();
         }
     }, [active, activate]);
@@ -82,7 +82,7 @@ const Sale = () => {
         try {
             return await call();
         } catch (err) {
-            console.error("HERRE", err);
+            console.error(err);
             setTxError("Transaction failed");
         }
     };

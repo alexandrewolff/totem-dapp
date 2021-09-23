@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
 import { injected, walletconnect } from "./wallets/connectors";
 
 const WalletConnection = () => {
     const { activate, deactivate, account, active, error } = useWeb3React();
-
+    console.log(active, account, error instanceof UnsupportedChainIdError);
     const connect = async (connector) => {
         try {
             await activate(connector);
