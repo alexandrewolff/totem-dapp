@@ -2,7 +2,7 @@ import React from "react";
 import { ethers } from "ethers";
 
 const SaleInfo = ({ saleSettings, tokensAtSale, tokensSold, txError }) => {
-    let saleInfo = txError ? <p>{txError}</p> : <p>Loading...</p>;
+    let saleInfo = txError ? <p>{txError}</p> : null;
     if (saleSettings && tokensAtSale && tokensSold) {
         saleInfo = (
             <div>

@@ -87,16 +87,40 @@ const Sale = () => {
         }
     };
 
-    return (
-        <div>
-            <h1>Totem Token Sale</h1>
+    const now = Math.floor(new Date().getTime / 1000);
+
+    let display;
+    if (!saleSettings) {
+        display = <p>Loading...</p>;
+    } else if (now < saleSettings.saleStart) {
+        display = (
             <SaleInfo
                 saleSettings={saleSettings}
                 tokensAtSale={tokensAtSale}
                 tokensSold={tokensSold}
                 txError={txError}
             />
-            <WalletConnection />
+        );
+    } else if (now < saleSettings.saleEnd) {
+        display = (
+            <>
+                <SaleInfo
+                    saleSettings={saleSettings}
+                    tokensAtSale={tokensAtSale}
+                    tokensSold={tokensSold}
+                    txError={txError}
+                />
+                <WalletConnection />
+            </>
+        );
+    } else {
+        display = "Sale ended";
+    }
+
+    return (
+        <div>
+            <h1>Totem Token Sale</h1>
+            {display}
         </div>
     );
 };
