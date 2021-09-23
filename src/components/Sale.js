@@ -20,6 +20,23 @@ const Sale = () => {
     const [network, setNetwork] = useState("");
     const [networkId, setNetworkId] = useState(null);
 
+    // useEffect(() => {
+    //     const activateNetwork = async () => {
+    //         await activate(network);
+    //     };
+    //     if (!active) {
+    //         activateNetwork();
+    //     }
+    // }, [active, activate]);
+
+    // useEffect(() => {
+    //     const fetchContractData = async () => {
+    //         const block = await provider.getBlockNumber();
+    //         console.log(block);
+    //     };
+    //     fetchContractData();
+    // }, []);
+
     const providerOptions = {
         walletconnect: {
             package: WalletConnectProvider,

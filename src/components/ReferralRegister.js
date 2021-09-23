@@ -1,29 +1,72 @@
 import React, { useState, useEffect } from "react";
+import {
+    useWeb3React,
+    getWeb3ReactContext,
+    UnsupportedChainIdError,
+} from "@web3-react/core";
+import { injected, walletconnect, network } from "./wallets/connectors";
 import { ethers } from "ethers";
 
-import config from "../config.json";
+// import config from "../config.json";
 
 const ReferralRegister = () => {
-	const [provider, setProvider] = useState(undefined);
-	const [crowdsaleContract, setCrowdsaleContract] = useState(undefined);
-	const [saleSettings, setSaleSettings] = useState(undefined);
+    const [showModal, setShowModal] = useState(false);
+    const {
+        activate,
+        deactivate,
+        chainId,
+        account,
+        active,
+        error,
+        library: provider,
+        connector,
+    } = useWeb3React();
 
-	useEffect(() => {
-		const init = async () => {
-			const provider = new ethers.providers.JsonRpcProvider(config.endpoint);
-			const crowdsaleContract = new ethers.Contract(config.crowdsaleAddress, config.crowdsaleAbi, provider);
+    useEffect(() => {
+        const isUnsupportedChainIdError =
+            error instanceof UnsupportedChainIdError;
+        console.log(active, chainId, account, isUnsupportedChainIdError);
+    });
 
-			setProvider(provider);
-			setCrowdsaleContract(crowdsaleContract);
-		}
-		init();
-	}, [])
+    const connect = async (connector) => {
+        try {
+            await activate(connector);
+        } catch (err) {
+            console.error("Failed to connect: ", err);
+        }
+    };
 
-  return(
-	<div>
+    let walletConnection;
+    const isUnsupportedChainIdError = error instanceof UnsupportedChainIdError;
+    if (active || isUnsupportedChainIdError) {
+        walletConnection = (
+            <>
+                {isUnsupportedChainIdError ? (
+                    <p>Please switch to Binance Smart Chain</p>
+                ) : null}
+                <button onClick={deactivate}>Disconnect Wallet</button>
+            </>
+        );
+    } else {
+        walletConnection = (
+            <>
+                <button onClick={() => connect(injected)}>
+                    Connect Metamask
+                </button>
+                <button onClick={() => connect(walletconnect)}>
+                    Connect WalletConnect
+                </button>
+            </>
+        );
+    }
 
-	</div>
-  )
-}
+    return (
+        <div>
+            <h1>Referral Register</h1>
+            {account ? <p>Account: {account}</p> : null}
+            {walletConnection}
+        </div>
+    );
+};
 
 export default ReferralRegister;
