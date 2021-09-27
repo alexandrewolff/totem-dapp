@@ -19,7 +19,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     const [acceptedLegualAgreement, setAcceptedLegualAgreement] =
         useState(false);
     const [tokensBought, setTokensBought] = useState("");
-    const [warning, setInfo] = useState("");
+    const [info, setInfo] = useState("");
 
     const { account, library: provider } = useWeb3React();
 
@@ -33,7 +33,6 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             const events = await contract.queryFilter(filter);
             const { tokens } = events[0].args;
 
-            const tokenToSymbol = new Map();
             for (let i = 0; i < tokens.length; i += 1) {
                 const contract = new ethers.Contract(
                     tokens[i],
@@ -50,8 +49,11 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             setTokenSelected(tokens[0]);
         };
         init();
-        updateTokensBought();
     }, []);
+
+    useEffect(() => {
+        updateTokensBought();
+    }, [account]);
 
     const updateTokensBought = async () => {
         const contract = getContractReader(
@@ -71,7 +73,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     };
 
     const valueHandler = (event) => {
-        if (warning) {
+        if (info) {
             setInfo("");
         }
 
@@ -101,14 +103,14 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
 
     const approveHandler = async () => {
         const signer = provider.getSigner();
-        const contract = new ethers.Contract(
-            tokenSelected.address,
-            abi.erc20,
-            signer
-        );
+        const contract = new ethers.Contract(tokenSelected, abi.erc20, signer);
 
         try {
-            await contract.approve(config.crowdsaleAddress, MAX_UINT256_VALUE);
+            const tx = await contract.approve(
+                config.crowdsaleAddress,
+                MAX_UINT256_VALUE
+            );
+            await tx.wait();
             displayInfo("Approval successfull");
         } catch (err) {
             console.error(err);
@@ -133,13 +135,16 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             signer
         );
 
+        const parsedBuyValue = ethers.utils.parseUnits(buyValue, 18);
         try {
-            await contract.buyToken(
-                tokenSelected.address,
-                buyValue,
+            const tx = await contract.buyToken(
+                tokenSelected,
+                parsedBuyValue,
                 ZERO_ADDRESS
             );
+            await tx.wait();
             setBuyValue("");
+            setTokensInReturn(0);
             updateTokensBought();
             displayInfo("Tokens successfully bought");
         } catch (err) {
@@ -187,8 +192,11 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
                 </button>
                 <button onClick={buyHandler}>Buy Tokens</button>
                 <p>You will get {tokensInReturn} tokens</p>
-                {warning ? <p>{warning}</p> : null}
-                <p>You bought {tokensBought} tokens</p>
+                {info ? <p>{info}</p> : null}
+                <p>
+                    You bought {ethers.utils.formatUnits(tokensBought, 18)}{" "}
+                    tokens
+                </p>
             </>
         );
     }
