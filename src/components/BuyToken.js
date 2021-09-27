@@ -6,6 +6,9 @@ import LegalAgreement from "./LegalAgreement";
 
 import config from "../config.json";
 import abi from "../abi.json";
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const MAX_UINT256_VALUE =
+    "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
 const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     const [paymentTokens, setPaymentTokens] = useState([]);
@@ -15,7 +18,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     const [acceptedLegualAgreement, setAcceptedLegualAgreement] =
         useState(false);
     const [tokensBought, setTokensBought] = useState("");
-    const [warning, setWarning] = useState("");
+    const [warning, setInfo] = useState("");
 
     const { account, library: provider } = useWeb3React();
 
@@ -41,34 +44,35 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             }
 
             setPaymentTokens(paymentTokens);
-            setTokenSelected(paymentTokens[0].address);
+            setTokenSelected(paymentTokens[0]);
         };
         init();
     }, []);
 
     useEffect(() => {
-        const init = async () => {
-            const contract = getContractReader(
-                config.crowdsaleAddress,
-                abi.crowdsale
-            );
-            const tokensBought = await contract.getClaimableAmount(account);
-            setTokensBought(tokensBought.toString());
-        };
-        init();
+        updateTokensBought();
     }, []);
+
+    const updateTokensBought = async () => {
+        const contract = getContractReader(
+            config.crowdsaleAddress,
+            abi.crowdsale
+        );
+        const tokensBought = await contract.getClaimableAmount(account);
+        setTokensBought(tokensBought.toString());
+    };
 
     const getContractReader = (address, abi) => {
         return new ethers.Contract(address, abi, provider);
     };
 
     const tokenSelectionHandler = (event) => {
-        setTokenSelected(event.target.value.address);
+        setTokenSelected(event.target.value);
     };
 
     const valueHandler = (event) => {
         if (warning) {
-            setWarning("");
+            setInfo("");
         }
 
         const { value } = event.target;
@@ -80,13 +84,13 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
         }
 
         if (valueFloat < minBuyValue) {
-            setWarning(`You can't buy for less that ${minBuyValue}$`);
+            setInfo(`You can't buy for less that ${minBuyValue}$`);
         }
 
         const tokensInReturn = valueFloat * exchangeRate;
 
         if (tokensInReturn > maxTokenAmountPerAddress) {
-            setWarning(
+            setInfo(
                 `You can't buy more than ${maxTokenAmountPerAddress} tokens`
             );
         }
@@ -95,35 +99,99 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
         setTokensInReturn(tokensInReturn);
     };
 
+    const approveHandler = async () => {
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(
+            tokenSelected.address,
+            abi.erc20,
+            signer
+        );
+
+        try {
+            await contract.approve(config.crowdsaleAddress, MAX_UINT256_VALUE);
+            displayInfo("Approval successfull");
+        } catch (err) {
+            console.error(err);
+            displayInfo("Transaction failed");
+        }
+    };
+
+    const buyHandler = async () => {
+        if (buyValue === "") {
+            return;
+        } else if (!acceptedLegualAgreement) {
+            displayInfo(
+                "You need to accept legal agreement in order to buy tokens"
+            );
+            return;
+        }
+
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(
+            config.crowdsaleAddress,
+            abi.crowdsale,
+            signer
+        );
+
+        try {
+            await contract.buyToken(
+                tokenSelected.address,
+                buyValue,
+                ZERO_ADDRESS
+            );
+            setBuyValue("");
+            updateTokensBought();
+            displayInfo("Tokens successfully bought");
+        } catch (err) {
+            console.error(err);
+            displayInfo("Transaction failed");
+        }
+    };
+
+    const displayInfo = (info) => {
+        setInfo(info);
+        setTimeout(() => {
+            setInfo("");
+        }, 3000);
+    };
+
     const tokenOptions = paymentTokens.map((token) => (
         <option value={token.address} key={token.address}>
             {token.symbol}
         </option>
     ));
 
-    return (
-        <div>
-            {acceptedLegualAgreement ? null : (
-                <LegalAgreement
-                    acceptLegualAgreement={() =>
-                        setAcceptedLegualAgreement(true)
-                    }
+    let display = <p>Loading...</p>;
+    if (tokenSelected) {
+        display = (
+            <div>
+                {acceptedLegualAgreement ? null : (
+                    <LegalAgreement
+                        acceptLegualAgreement={() =>
+                            setAcceptedLegualAgreement(true)
+                        }
+                    />
+                )}
+                <select value={tokenSelected} onChange={tokenSelectionHandler}>
+                    {tokenOptions}
+                </select>
+                <input
+                    value={buyValue}
+                    onChange={valueHandler}
+                    placeholder="0.0000"
                 />
-            )}
-            <select value={tokenSelected} onChange={tokenSelectionHandler}>
-                {tokenOptions}
-            </select>
-            <input
-                value={buyValue}
-                onChange={valueHandler}
-                placeholder="0.0000"
-            />
-            <button>Buy Tokens</button>
-            <p>You will get {tokensInReturn} tokens</p>
-            {warning ? <p>{warning}</p> : null}
-            <p>You bought {tokensBought} tokens</p>
-        </div>
-    );
+                <button onClick={approveHandler}>
+                    Approve {tokenSelected.symbol}
+                </button>
+                <button onClick={buyHandler}>Buy Tokens</button>
+                <p>You will get {tokensInReturn} tokens</p>
+                {warning ? <p>{warning}</p> : null}
+                <p>You bought {tokensBought} tokens</p>
+            </div>
+        );
+    }
+
+    return <>{display}</>;
 };
 
 export default BuyToken;
