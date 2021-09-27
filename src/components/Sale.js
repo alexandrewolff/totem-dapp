@@ -88,7 +88,8 @@ const Sale = () => {
         }
     };
 
-    const now = Math.floor(new Date() / 1000);
+    // const now = Math.floor(new Date() / 1000);
+    const now = 2;
 
     let display;
     if (!saleSettings) {

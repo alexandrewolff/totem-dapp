@@ -12,6 +12,7 @@ const MAX_UINT256_VALUE =
 
 const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     const [paymentTokens, setPaymentTokens] = useState([]);
+    const [tokenToSymbol, setTokenToSymbol] = useState(new Map());
     const [tokenSelected, setTokenSelected] = useState("");
     const [buyValue, setBuyValue] = useState("");
     const [tokensInReturn, setTokensInReturn] = useState(0);
@@ -32,7 +33,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             const events = await contract.queryFilter(filter);
             const { tokens } = events[0].args;
 
-            const paymentTokens = [];
+            const tokenToSymbol = new Map();
             for (let i = 0; i < tokens.length; i += 1) {
                 const contract = new ethers.Contract(
                     tokens[i],
@@ -40,16 +41,15 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
                     provider
                 );
                 const symbol = await contract.symbol();
-                paymentTokens.push({ symbol, address: tokens[i] });
+                setTokenToSymbol((prev) =>
+                    new Map(prev).set(tokens[i], symbol)
+                );
             }
 
-            setPaymentTokens(paymentTokens);
-            setTokenSelected(paymentTokens[0]);
+            setPaymentTokens(tokens);
+            setTokenSelected(tokens[0]);
         };
         init();
-    }, []);
-
-    useEffect(() => {
         updateTokensBought();
     }, []);
 
@@ -155,16 +155,18 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
         }, 3000);
     };
 
-    const tokenOptions = paymentTokens.map((token) => (
-        <option value={token.address} key={token.address}>
-            {token.symbol}
-        </option>
-    ));
+    const tokenOptions = paymentTokens.map((token) => {
+        return (
+            <option value={token} key={token}>
+                {tokenToSymbol.get(token)}
+            </option>
+        );
+    });
 
     let display = <p>Loading...</p>;
     if (tokenSelected) {
         display = (
-            <div>
+            <>
                 {acceptedLegualAgreement ? null : (
                     <LegalAgreement
                         acceptLegualAgreement={() =>
@@ -187,11 +189,11 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
                 <p>You will get {tokensInReturn} tokens</p>
                 {warning ? <p>{warning}</p> : null}
                 <p>You bought {tokensBought} tokens</p>
-            </div>
+            </>
         );
     }
 
-    return <>{display}</>;
+    return <div>{display}</div>;
 };
 
 export default BuyToken;
