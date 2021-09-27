@@ -28,9 +28,20 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             const filter = contract.filters.PaymentCurrenciesAuthorized();
             const events = await contract.queryFilter(filter);
             const { tokens } = events[0].args;
-            const test = [...tokens, "k9878adsfas8dfy"];
-            setPaymentTokens(test);
-            setTokenSelected(test[0]);
+
+            const paymentTokens = [];
+            for (let i = 0; i < tokens.length; i += 1) {
+                const contract = new ethers.Contract(
+                    tokens[i],
+                    abi.erc20,
+                    provider
+                );
+                const symbol = await contract.symbol();
+                paymentTokens.push({ symbol, address: tokens[i] });
+            }
+
+            setPaymentTokens(paymentTokens);
+            setTokenSelected(paymentTokens[0].address);
         };
         init();
     }, []);
@@ -52,7 +63,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     };
 
     const tokenSelectionHandler = (event) => {
-        setTokenSelected(event.target.value);
+        setTokenSelected(event.target.value.address);
     };
 
     const valueHandler = (event) => {
@@ -85,8 +96,8 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     };
 
     const tokenOptions = paymentTokens.map((token) => (
-        <option value={token} key={token}>
-            {token}
+        <option value={token.address} key={token.address}>
+            {token.symbol}
         </option>
     ));
 
