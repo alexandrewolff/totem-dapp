@@ -4,7 +4,6 @@ import { injected, walletconnect } from "./wallets/connectors";
 
 const WalletConnection = () => {
     const { activate, deactivate, account, active, error } = useWeb3React();
-    console.log(active, account, error instanceof UnsupportedChainIdError);
     const connect = async (connector) => {
         try {
             await activate(connector);

@@ -14,15 +14,15 @@ export const injected = new InjectedConnector({
 
 export const walletconnect = new WalletConnectConnector({
     rpc: {
-        56: "https://bsc-dataseed.binance.org/",
-        97: "https://data-seed-prebsc-1-s2.binance.org:8545",
+        56: config.bsc_mainnet_endpoint,
+        97: config.bsc_testnet_endpoint,
     },
 });
 
 export const network = new NetworkConnector({
     urls: {
-        56: "https://bsc-dataseed.binance.org/",
-        97: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+        56: config.bsc_mainnet_endpoint,
+        97: config.bsc_testnet_endpoint,
     },
     defaultChainId,
 });

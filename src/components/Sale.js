@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 
 import WalletConnection from "./WalletConnection";
 import SaleInfo from "./SaleInfo";
+import BuyToken from "./BuyToken";
 
 import config from "../config.json";
 import abi from "../abi.json";
@@ -15,7 +16,7 @@ const Sale = () => {
     const [tokensAtSale, setTokensAtSale] = useState(undefined);
     const [tokensSold, setTokensSold] = useState(undefined);
     const [updateRequired, setUpdateRequired] = useState(true);
-    const [txError, setTxError] = useState("");
+    const [warning, setWarning] = useState("");
     const {
         activate,
         deactivate,
@@ -83,7 +84,7 @@ const Sale = () => {
             return await call();
         } catch (err) {
             console.error(err);
-            setTxError("Transaction failed");
+            setWarning("Transaction failed");
         }
     };
 
@@ -98,7 +99,7 @@ const Sale = () => {
                 saleSettings={saleSettings}
                 tokensAtSale={tokensAtSale}
                 tokensSold={tokensSold}
-                txError={txError}
+                warning={warning}
             />
         );
     } else if (now < saleSettings.saleEnd) {
@@ -108,9 +109,18 @@ const Sale = () => {
                     saleSettings={saleSettings}
                     tokensAtSale={tokensAtSale}
                     tokensSold={tokensSold}
-                    txError={txError}
+                    warning={warning}
                 />
                 <WalletConnection />
+                {account ? (
+                    <BuyToken
+                        minBuyValue={saleSettings.minBuyValue}
+                        maxTokenAmountPerAddress={
+                            saleSettings.maxTokenAmountPerAddress
+                        }
+                        exchangeRate={saleSettings.exchangeRate}
+                    />
+                ) : null}
             </>
         );
     } else {

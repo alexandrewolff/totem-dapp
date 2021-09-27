@@ -21,12 +21,14 @@ const SaleInfo = ({ saleSettings, tokensAtSale, tokensSold, txError }) => {
                 <p>
                     Tokens at sale:{" "}
                     {tokensAtSale
-                        ? ethers.utils.formatEther(tokensAtSale)
+                        ? ethers.utils.formatUnits(tokensAtSale, 18)
                         : null}
                 </p>
                 <p>
                     Tokens sold:{" "}
-                    {tokensSold ? ethers.utils.formatEther(tokensSold) : null}
+                    {tokensSold
+                        ? ethers.utils.formatUnits(tokensSold, 18)
+                        : null}
                 </p>
                 <p>
                     Price per token: {1 / saleSettings.exchangeRate.toNumber()}$
