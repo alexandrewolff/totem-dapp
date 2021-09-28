@@ -11,6 +11,7 @@ const MAX_UINT256_VALUE =
     "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
 const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
+    const [signer, setSigner] = useState(undefined);
     const [paymentTokens, setPaymentTokens] = useState([]);
     const [tokenToSymbol, setTokenToSymbol] = useState(new Map());
     const [tokenSelected, setTokenSelected] = useState("");
@@ -52,6 +53,8 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     }, []);
 
     useEffect(() => {
+        const signer = provider.getSigner();
+        setSigner(signer);
         updateTokensBought();
     }, [account]);
 
@@ -102,7 +105,6 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     };
 
     const approveHandler = async () => {
-        const signer = provider.getSigner();
         const contract = new ethers.Contract(tokenSelected, abi.erc20, signer);
 
         try {
@@ -128,7 +130,6 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             return;
         }
 
-        const signer = provider.getSigner();
         const contract = new ethers.Contract(
             config.crowdsaleAddress,
             abi.crowdsale,
