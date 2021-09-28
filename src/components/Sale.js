@@ -91,7 +91,7 @@ const Sale = () => {
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 6;
+    const now = 4;
 
     let display;
     if (!saleSettings) {
@@ -125,6 +125,15 @@ const Sale = () => {
                     />
                 ) : null}
             </>
+        );
+    } else if (now < saleSettings.withdrawalStart) {
+        display = (
+            <p>
+                Sale ended. You can start to claim your tokens from{" "}
+                {new Date(
+                    saleSettings.withdrawalStart.toNumber() * 1000
+                ).toDateString()}
+            </p>
         );
     } else {
         display = (
