@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
+import { useWeb3React } from "@web3-react/core";
 import { ethers } from "ethers";
 
 import LegalAgreement from "./LegalAgreement";

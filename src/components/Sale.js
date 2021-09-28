@@ -7,6 +7,7 @@ import { ethers } from "ethers";
 import WalletConnection from "./WalletConnection";
 import SaleInfo from "./SaleInfo";
 import BuyToken from "./BuyToken";
+import WithdrawToken from "./WithdrawToken";
 
 import config from "../config.json";
 import abi from "../abi.json";
@@ -45,6 +46,7 @@ const Sale = () => {
             const saleSettings = await tryReadTx(() =>
                 crowdsaleContract.getSaleSettings()
             );
+            console.log(saleSettings);
             const tokensSold = await tryReadTx(() =>
                 crowdsaleContract.getSoldAmount()
             );
@@ -89,7 +91,7 @@ const Sale = () => {
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 2;
+    const now = 6;
 
     let display;
     if (!saleSettings) {
@@ -125,7 +127,20 @@ const Sale = () => {
             </>
         );
     } else {
-        display = "Sale ended";
+        display = (
+            <>
+                <WalletConnection />
+                {account ? (
+                    <WithdrawToken
+                        withdrawalStart={saleSettings.withdrawalStart}
+                        withdrawPeriodDuration={
+                            saleSettings.withdrawPeriodDuration
+                        }
+                        withdrawPeriodNumber={saleSettings.withdrawPeriodNumber}
+                    />
+                ) : null}
+            </>
+        );
     }
 
     return (
