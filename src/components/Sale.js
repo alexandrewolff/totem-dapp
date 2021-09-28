@@ -46,7 +46,6 @@ const Sale = () => {
             const saleSettings = await tryReadTx(() =>
                 crowdsaleContract.getSaleSettings()
             );
-            console.log(saleSettings);
             const tokensSold = await tryReadTx(() =>
                 crowdsaleContract.getSoldAmount()
             );
@@ -91,7 +90,7 @@ const Sale = () => {
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 4;
+    const now = 1000;
 
     let display;
     if (!saleSettings) {
@@ -141,6 +140,7 @@ const Sale = () => {
                 <WalletConnection />
                 {account ? (
                     <WithdrawToken
+                        now={now}
                         withdrawalStart={saleSettings.withdrawalStart}
                         withdrawPeriodDuration={
                             saleSettings.withdrawPeriodDuration

@@ -6,10 +6,16 @@ import config from "../config.json";
 import abi from "../abi.json";
 const SECONDS_PER_DAY = ethers.BigNumber.from("86400");
 
-const WithdrawToken = ({ withdrawPeriodNumber, withdrawPeriodDuration }) => {
+const WithdrawToken = ({
+    now,
+    withdrawPeriodNumber,
+    withdrawPeriodDuration,
+    withdrawalStart,
+}) => {
     const [tokensBought, setTokensBought] = useState(undefined);
     const [tokensWithdrew, setTokensWithdrew] = useState(undefined);
     const [signer, setSigner] = useState(undefined);
+    const [info, setInfo] = useState("");
 
     const { account, library: provider, chainId, error } = useWeb3React();
 
@@ -46,10 +52,45 @@ const WithdrawToken = ({ withdrawPeriodNumber, withdrawPeriodDuration }) => {
         return new ethers.Contract(address, abi, provider);
     };
 
-    console.log(withdrawPeriodNumber.toString());
+    const withdrawHandler = async () => {
+        const contract = new ethers.Contract(
+            config.crowdsaleAddress,
+            abi.crowdsale,
+            signer
+        );
+        try {
+            const tx = await contract.withdrawToken();
+            await tx.wait();
+            updateTokensBought();
+            displayInfo("Tokens successfully claimed");
+        } catch (err) {
+            console.error(err);
+            displayInfo("Transaction failed");
+        }
+    };
+
+    const displayInfo = (info) => {
+        setInfo(info);
+        setTimeout(() => {
+            setInfo("");
+        }, 3000);
+    };
 
     let display = <p>Loading...</p>;
-    if (tokensBought && tokensWithdrew) {
+    if (tokensBought?.eq(0)) {
+        display = <p>Sale ended</p>;
+    } else if (tokensBought && tokensWithdrew) {
+        const withdrawableAmountPerPeriod =
+            tokensBought.div(withdrawPeriodNumber);
+        const periodsElapsed = ethers.BigNumber.from(now)
+            .sub(withdrawalStart)
+            .div(withdrawPeriodDuration)
+            .add(ethers.BigNumber.from("1"));
+        const withdrawableAmount = periodsElapsed.lt(withdrawPeriodNumber)
+            ? withdrawableAmountPerPeriod
+                  .mul(periodsElapsed)
+                  .sub(tokensWithdrew)
+            : tokensBought.sub(tokensWithdrew);
         display = (
             <>
                 <p>
@@ -63,13 +104,23 @@ const WithdrawToken = ({ withdrawPeriodNumber, withdrawPeriodDuration }) => {
                 <p>
                     You can claim{" "}
                     {ethers.utils.formatUnits(
-                        tokensBought.div(withdrawPeriodNumber).toString(),
+                        withdrawableAmountPerPeriod.toString(),
                         18
                     )}{" "}
                     tokens every{" "}
                     {withdrawPeriodDuration.div(SECONDS_PER_DAY).toString()}{" "}
                     days
                 </p>
+                <p>
+                    You can claim{" "}
+                    {ethers.utils.formatUnits(
+                        withdrawableAmount.toString(),
+                        18
+                    )}{" "}
+                    tokens right now
+                </p>
+                <button onClick={withdrawHandler}>Claim tokens</button>
+                {info ? <p>{info}</p> : null}
             </>
         );
     }
