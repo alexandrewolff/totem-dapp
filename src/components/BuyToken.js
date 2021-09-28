@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useWeb3React } from "@web3-react/core";
+import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
 import { ethers } from "ethers";
 
 import LegalAgreement from "./LegalAgreement";
@@ -22,7 +22,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     const [tokensBought, setTokensBought] = useState("");
     const [info, setInfo] = useState("");
 
-    const { account, library: provider } = useWeb3React();
+    const { account, library: provider, chainId, error } = useWeb3React();
 
     useEffect(() => {
         const init = async () => {
@@ -63,7 +63,13 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
             config.crowdsaleAddress,
             abi.crowdsale
         );
-        const tokensBought = await contract.getClaimableAmount(account);
+        let tokensBought;
+        try {
+            tokensBought = await contract.getClaimableAmount(account);
+        } catch (err) {
+            console.error(err);
+            return;
+        }
         setTokensBought(tokensBought.toString());
     };
 
@@ -169,8 +175,14 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
         );
     });
 
+    let defaultChainId;
+    if (config.network === "mainnet") defaultChainId = 56;
+    else if (config.network === "testnet") defaultChainId = 97;
+
     let display = <p>Loading...</p>;
-    if (tokenSelected) {
+    if (chainId !== defaultChainId) {
+        display = <p>Please switch to Binance Smart Chain</p>;
+    } else if (tokenSelected) {
         display = (
             <>
                 {acceptedLegualAgreement ? null : (
