@@ -1,52 +1,44 @@
-import React, { useState } from "react";
-import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
+import { useState, useEffect } from "react";
+import { useWeb3React } from "@web3-react/core";
 import { ethers } from "ethers";
 
 import WalletConnection from "../WalletConnection/WalletConnection";
 
-import abi from "../../abi.json";
+import { getCrowdsaleWriter, displayInfo } from "../../utils/utils";
 
-const ReferralRegister = ({ crowdsaleAddress }) => {
+const ReferralRegister = () => {
+    const [signer, setSigner] = useState(undefined);
     const [info, setInfo] = useState("");
-    const {
-        activate,
-        deactivate,
-        account,
-        active,
-        error,
-        library: provider,
-    } = useWeb3React();
+
+    const { account, library: provider } = useWeb3React();
+
+    useEffect(() => {
+        if (!provider) return;
+        const signer = provider.getSigner();
+        setSigner(signer);
+    }, [account, provider]);
 
     const registerHandler = async () => {
-        const contract = getContractWriter();
+        const contract = getCrowdsaleWriter(signer);
         if (await isAlreadyReferral(contract))
-            return displayInfo("Account already registered as referral");
+            return displayInfo(
+                setInfo,
+                "Account already registered as referral"
+            );
         await tryRegisterTx(contract);
-    };
-
-    const getContractWriter = () => {
-        const signer = provider.getSigner();
-        return new ethers.Contract(crowdsaleAddress, abi.crowdsale, signer);
     };
 
     const isAlreadyReferral = async (contract) => {
         return await contract.isReferral(account);
     };
 
-    const displayInfo = (info) => {
-        setInfo(info);
-        setTimeout(() => {
-            setInfo("");
-        }, 3000);
-    };
-
     const tryRegisterTx = async (contract) => {
         try {
             await sendRegisterTx(contract);
-            displayInfo("Account successfully registered as referral");
+            displayInfo(setInfo, "Account successfully registered as referral");
         } catch (err) {
             console.error(err);
-            displayInfo("Transaction failed");
+            displayInfo(setInfo, "Transaction failed");
         }
     };
 

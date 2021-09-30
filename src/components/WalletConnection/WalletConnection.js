@@ -1,11 +1,11 @@
-import React from "react";
 import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
 
 import { injected, walletconnect } from "../../utils/walletConnectors";
 
 const WalletConnection = () => {
-    const { activate, deactivate, account, active, error } = useWeb3React();
-    const connect = async (connector) => {
+    const { activate, deactivate, account, error } = useWeb3React();
+
+    const connectHandler = async (connector) => {
         try {
             await activate(connector);
         } catch (err) {
@@ -29,11 +29,11 @@ const WalletConnection = () => {
         walletConnection = (
             <div>
                 {window.ethereum ? (
-                    <button onClick={() => connect(injected)}>
+                    <button onClick={() => connectHandler(injected)}>
                         Connect Metamask
                     </button>
                 ) : null}
-                <button onClick={() => connect(walletconnect)}>
+                <button onClick={() => connectHandler(walletconnect)}>
                     Connect WalletConnect
                 </button>
             </div>

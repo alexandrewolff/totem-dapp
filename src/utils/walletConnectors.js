@@ -2,11 +2,10 @@ import { InjectedConnector } from "@web3-react/injected-connector";
 import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
 import { NetworkConnector } from "@web3-react/network-connector";
 
+import { getDefaultChainId } from "./utils";
 import config from "../config.json";
 
-let defaultChainId;
-if (config.network === "mainnet") defaultChainId = 56;
-else if (config.network === "testnet") defaultChainId = 97;
+const defaultChainId = getDefaultChainId();
 
 export const injected = new InjectedConnector({
     supportedChainIds: [defaultChainId],
