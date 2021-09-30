@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { ethers } from "ethers";
+// import Cookies from "js-cookie";
 
-import LegalAgreement from "./LegalAgreement";
+// Cookies.set("referral", "value", { expires: 365 });
+// Cookies.get("referral");
+// Cookies.remove("referral");
 
-import config from "../config.json";
-import abi from "../abi.json";
+import LegalAgreement from "./LegalAgreement/LegalAgreement";
+
+import config from "../../../config.json";
+import abi from "../../../abi.json";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const MAX_UINT256_VALUE =
     "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
-const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
+const BuyToken = ({
+    crowdsaleAddress,
+    minBuyValue,
+    maxTokenAmountPerAddress,
+    exchangeRate,
+}) => {
     const [signer, setSigner] = useState(undefined);
     const [paymentTokens, setPaymentTokens] = useState([]);
     const [tokenToSymbol, setTokenToSymbol] = useState(new Map());
@@ -26,10 +36,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
 
     useEffect(() => {
         const init = async () => {
-            const contract = getContractReader(
-                config.crowdsaleAddress,
-                abi.crowdsale
-            );
+            const contract = getContractReader(crowdsaleAddress, abi.crowdsale);
             const filter = contract.filters.PaymentCurrenciesAuthorized();
             const events = await contract.queryFilter(filter);
             const { tokens } = events[0].args;
@@ -59,10 +66,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
     }, [account]);
 
     const updateTokensBought = async () => {
-        const contract = getContractReader(
-            config.crowdsaleAddress,
-            abi.crowdsale
-        );
+        const contract = getContractReader(crowdsaleAddress, abi.crowdsale);
         let tokensBought;
         try {
             tokensBought = await contract.getClaimableAmount(account);
@@ -115,7 +119,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
 
         try {
             const tx = await contract.approve(
-                config.crowdsaleAddress,
+                crowdsaleAddress,
                 MAX_UINT256_VALUE
             );
             await tx.wait();
@@ -137,7 +141,7 @@ const BuyToken = ({ minBuyValue, maxTokenAmountPerAddress, exchangeRate }) => {
         }
 
         const contract = new ethers.Contract(
-            config.crowdsaleAddress,
+            crowdsaleAddress,
             abi.crowdsale,
             signer
         );

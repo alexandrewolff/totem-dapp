@@ -1,6 +1,7 @@
 import React from "react";
 import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
-import { injected, walletconnect } from "./wallets/connectors";
+
+import { injected, walletconnect } from "../../utils/walletConnectors";
 
 const WalletConnection = () => {
     const { activate, deactivate, account, active, error } = useWeb3React();

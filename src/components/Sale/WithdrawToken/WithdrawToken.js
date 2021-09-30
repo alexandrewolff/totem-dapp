@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { ethers } from "ethers";
 
-import config from "../config.json";
-import abi from "../abi.json";
+import abi from "../../../abi.json";
 const SECONDS_PER_DAY = ethers.BigNumber.from("86400");
 
 const WithdrawToken = ({
+    crowdsaleAddress,
     now,
     withdrawPeriodNumber,
     withdrawPeriodDuration,
@@ -26,10 +26,7 @@ const WithdrawToken = ({
     }, [account]);
 
     const updateTokensBought = async () => {
-        const contract = getContractReader(
-            config.crowdsaleAddress,
-            abi.crowdsale
-        );
+        const contract = getContractReader(crowdsaleAddress, abi.crowdsale);
         let tokensBought;
         try {
             tokensBought = await contract.getClaimableAmount(account);
@@ -54,7 +51,7 @@ const WithdrawToken = ({
 
     const withdrawHandler = async () => {
         const contract = new ethers.Contract(
-            config.crowdsaleAddress,
+            crowdsaleAddress,
             abi.crowdsale,
             signer
         );

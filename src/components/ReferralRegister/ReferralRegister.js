@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
 import { ethers } from "ethers";
 
-import WalletConnection from "./WalletConnection";
+import WalletConnection from "../WalletConnection/WalletConnection";
 
-import config from "../config.json";
-import abi from "../abi.json";
+import abi from "../../abi.json";
 
-const ReferralRegister = () => {
+const ReferralRegister = ({ crowdsaleAddress }) => {
     const [info, setInfo] = useState("");
     const {
         activate,
@@ -27,11 +26,7 @@ const ReferralRegister = () => {
 
     const getContractWriter = () => {
         const signer = provider.getSigner();
-        return new ethers.Contract(
-            config.crowdsaleAddress,
-            abi.crowdsale,
-            signer
-        );
+        return new ethers.Contract(crowdsaleAddress, abi.crowdsale, signer);
     };
 
     const isAlreadyReferral = async (contract) => {
@@ -61,7 +56,7 @@ const ReferralRegister = () => {
     };
 
     let register;
-    if (active) {
+    if (account) {
         register = (
             <div>
                 <button onClick={registerHandler}>Register as referral</button>

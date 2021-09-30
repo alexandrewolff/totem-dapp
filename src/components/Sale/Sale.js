@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
-import { network } from "./wallets/connectors";
-
 import { ethers } from "ethers";
 
-import WalletConnection from "./WalletConnection";
-import SaleInfo from "./SaleInfo";
-import BuyToken from "./BuyToken";
-import WithdrawToken from "./WithdrawToken";
+import WalletConnection from "../WalletConnection/WalletConnection";
+import SaleInfo from "./SaleInfo/SaleInfo";
+import BuyToken from "./BuyToken/BuyToken";
+import WithdrawToken from "./WithdrawToken/WithdrawToken";
 
-import config from "../config.json";
-import abi from "../abi.json";
+import { network } from "../../utils/walletConnectors";
+import abi from "../../abi.json";
 
-const Sale = () => {
+const Sale = ({ crowdsaleAddress }) => {
     const [saleSettings, setSaleSettings] = useState(undefined);
     const [tokensAtSale, setTokensAtSale] = useState(undefined);
     const [tokensSold, setTokensSold] = useState(undefined);
@@ -40,7 +38,7 @@ const Sale = () => {
     useEffect(() => {
         const fetchContractInfo = async () => {
             const crowdsaleContract = getContractReader(
-                config.crowdsaleAddress,
+                crowdsaleAddress,
                 abi.crowdsale
             );
             const saleSettings = await tryReadTx(() =>
@@ -54,7 +52,7 @@ const Sale = () => {
                 abi.erc20
             );
             const tokensAtSale = await tryReadTx(() =>
-                tokenContract.balanceOf(config.crowdsaleAddress)
+                tokenContract.balanceOf(crowdsaleAddress)
             );
 
             setSaleSettings(saleSettings);
@@ -74,7 +72,7 @@ const Sale = () => {
     // const getContractWriter = () => {
     //     const signer = provider.getSigner();
     //     return new ethers.Contract(
-    //         config.crowdsaleAddress,
+    //         crowdsaleAddress,
     //         abi.crowdsale,
     //         signer
     //     );
@@ -90,7 +88,7 @@ const Sale = () => {
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 1000;
+    const now = 2;
 
     let display;
     if (!saleSettings) {
@@ -116,6 +114,7 @@ const Sale = () => {
                 <WalletConnection />
                 {account ? (
                     <BuyToken
+                        crowdsaleAddress={crowdsaleAddress}
                         minBuyValue={saleSettings.minBuyValue}
                         maxTokenAmountPerAddress={
                             saleSettings.maxTokenAmountPerAddress
@@ -140,6 +139,7 @@ const Sale = () => {
                 <WalletConnection />
                 {account ? (
                     <WithdrawToken
+                        crowdsaleAddress={crowdsaleAddress}
                         now={now}
                         withdrawalStart={saleSettings.withdrawalStart}
                         withdrawPeriodDuration={
