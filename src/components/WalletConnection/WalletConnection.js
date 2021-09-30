@@ -13,10 +13,10 @@ const WalletConnection = () => {
         }
     };
 
-    let walletConnection;
+    let display;
     const isUnsupportedChainIdError = error instanceof UnsupportedChainIdError;
     if (account || isUnsupportedChainIdError) {
-        walletConnection = (
+        display = (
             <div>
                 {account ? <p>Account: {account}</p> : null}
                 {isUnsupportedChainIdError ? (
@@ -26,7 +26,7 @@ const WalletConnection = () => {
             </div>
         );
     } else {
-        walletConnection = (
+        display = (
             <div>
                 {window.ethereum ? (
                     <button onClick={() => connectHandler(injected)}>
@@ -40,7 +40,7 @@ const WalletConnection = () => {
         );
     }
 
-    return walletConnection;
+    return display;
 };
 
 export default WalletConnection;

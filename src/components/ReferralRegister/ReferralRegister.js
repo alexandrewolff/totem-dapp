@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 
 import WalletConnection from "../WalletConnection/WalletConnection";
 
-import { getCrowdsaleWriter, displayInfo } from "../../utils/utils";
+import { getCrowdsaleContract, displayInfo } from "../../utils/utils";
 
 const ReferralRegister = () => {
     const [signer, setSigner] = useState(undefined);
@@ -19,7 +19,7 @@ const ReferralRegister = () => {
     }, [account, provider]);
 
     const registerHandler = async () => {
-        const contract = getCrowdsaleWriter(signer);
+        const contract = getCrowdsaleContract(signer);
         if (await isAlreadyReferral(contract))
             return displayInfo(
                 setInfo,
@@ -47,9 +47,9 @@ const ReferralRegister = () => {
         await tx.wait();
     };
 
-    let register;
+    let display;
     if (account) {
-        register = (
+        display = (
             <div>
                 <button onClick={registerHandler}>Register as referral</button>
                 {info ? <p>{info}</p> : null}
@@ -61,7 +61,7 @@ const ReferralRegister = () => {
         <div>
             <h1>Referral Register</h1>
             <WalletConnection />
-            {register}
+            {display}
         </div>
     );
 };

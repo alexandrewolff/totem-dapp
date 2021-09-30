@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
-import { ethers } from "ethers";
+import { useState, useEffect, useCallback } from "react";
+import { useWeb3React } from "@web3-react/core";
 
 import WalletConnection from "../WalletConnection/WalletConnection";
 import SaleInfo from "./SaleInfo/SaleInfo";
 import BuyToken from "./BuyToken/BuyToken";
 import WithdrawToken from "./WithdrawToken/WithdrawToken";
 
+import {
+    formatTimestamp,
+    getCrowdsaleContract,
+    getErc20Contract,
+} from "../../utils/utils";
 import { network } from "../../utils/walletConnectors";
-import abi from "../../abi.json";
 
 const Sale = ({ crowdsaleAddress }) => {
     const [saleSettings, setSaleSettings] = useState(undefined);
@@ -16,13 +19,12 @@ const Sale = ({ crowdsaleAddress }) => {
     const [tokensSold, setTokensSold] = useState(undefined);
     const [updateRequired, setUpdateRequired] = useState(true);
     const [warning, setWarning] = useState("");
+
     const {
         activate,
-        deactivate,
         account,
         active,
         error,
-        connector,
         library: provider,
     } = useWeb3React();
 
@@ -33,28 +35,27 @@ const Sale = ({ crowdsaleAddress }) => {
         if (!active && !error) {
             activateNetwork();
         }
-    }, [active, activate]);
+    }, [active, error, activate]);
+
+    const getSaleInfo = useCallback(async () => {
+        const crowdsaleContract = getCrowdsaleContract(provider);
+        const saleSettings = await tryReadTx(() =>
+            crowdsaleContract.getSaleSettings()
+        );
+        const tokensSold = await tryReadTx(() =>
+            crowdsaleContract.getSoldAmount()
+        );
+        const tokenContract = getErc20Contract(saleSettings.token, provider);
+        const tokensAtSale = await tryReadTx(() =>
+            tokenContract.balanceOf(crowdsaleAddress)
+        );
+        return { saleSettings, tokensSold, tokensAtSale };
+    }, [provider, crowdsaleAddress]);
 
     useEffect(() => {
         const fetchContractInfo = async () => {
-            const crowdsaleContract = getContractReader(
-                crowdsaleAddress,
-                abi.crowdsale
-            );
-            const saleSettings = await tryReadTx(() =>
-                crowdsaleContract.getSaleSettings()
-            );
-            const tokensSold = await tryReadTx(() =>
-                crowdsaleContract.getSoldAmount()
-            );
-            const tokenContract = getContractReader(
-                saleSettings.token,
-                abi.erc20
-            );
-            const tokensAtSale = await tryReadTx(() =>
-                tokenContract.balanceOf(crowdsaleAddress)
-            );
-
+            const { saleSettings, tokensSold, tokensAtSale } =
+                await getSaleInfo();
             setSaleSettings(saleSettings);
             setTokensAtSale(tokensAtSale);
             setTokensSold(tokensSold);
@@ -63,20 +64,7 @@ const Sale = ({ crowdsaleAddress }) => {
         if (provider && updateRequired) {
             fetchContractInfo();
         }
-    }, [provider, updateRequired]);
-
-    const getContractReader = (address, abi) => {
-        return new ethers.Contract(address, abi, provider);
-    };
-
-    // const getContractWriter = () => {
-    //     const signer = provider.getSigner();
-    //     return new ethers.Contract(
-    //         crowdsaleAddress,
-    //         abi.crowdsale,
-    //         signer
-    //     );
-    // };
+    }, [provider, updateRequired, getSaleInfo]);
 
     const tryReadTx = async (call) => {
         try {
@@ -88,7 +76,7 @@ const Sale = ({ crowdsaleAddress }) => {
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 2;
+    const now = 3;
 
     let display;
     if (!saleSettings) {
@@ -104,7 +92,7 @@ const Sale = ({ crowdsaleAddress }) => {
         );
     } else if (now < saleSettings.saleEnd) {
         display = (
-            <>
+            <div>
                 <SaleInfo
                     saleSettings={saleSettings}
                     tokensAtSale={tokensAtSale}
@@ -122,20 +110,18 @@ const Sale = ({ crowdsaleAddress }) => {
                         exchangeRate={saleSettings.exchangeRate}
                     />
                 ) : null}
-            </>
+            </div>
         );
     } else if (now < saleSettings.withdrawalStart) {
         display = (
             <p>
                 Sale ended. You can start to claim your tokens from{" "}
-                {new Date(
-                    saleSettings.withdrawalStart.toNumber() * 1000
-                ).toDateString()}
+                {formatTimestamp(saleSettings.withdrawalStart)}
             </p>
         );
     } else {
         display = (
-            <>
+            <div>
                 <WalletConnection />
                 {account ? (
                     <WithdrawToken
@@ -148,7 +134,7 @@ const Sale = ({ crowdsaleAddress }) => {
                         withdrawPeriodNumber={saleSettings.withdrawPeriodNumber}
                     />
                 ) : null}
-            </>
+            </div>
         );
     }
 

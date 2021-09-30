@@ -15,6 +15,18 @@ export const displayInfo = (setter, info) => {
     }, 3000);
 };
 
-export const getCrowdsaleWriter = (signer) => {
-    return new ethers.Contract(config.crowdsaleAddress, abi.crowdsale, signer);
+export const formatTimestamp = (timestamp) => {
+    return new Date(timestamp.toNumber() * 1000).toDateString();
+};
+
+export const getCrowdsaleContract = (provider) => {
+    return getContract(config.crowdsaleAddress, abi.crowdsale, provider);
+};
+
+export const getErc20Contract = (address, provider) => {
+    return getContract(address, abi.erc20, provider);
+};
+
+const getContract = (address, abi, provider) => {
+    return new ethers.Contract(address, abi, provider);
 };
