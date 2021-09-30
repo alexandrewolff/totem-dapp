@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { ethers } from "ethers";
 // import Cookies from "js-cookie";
 
 // Cookies.set("referral", "value", { expires: 365 });
 // Cookies.get("referral");
 // Cookies.remove("referral");
 
+import Loader from "../../UI/Loader";
 import LegalAgreement from "./LegalAgreement/LegalAgreement";
 
-import config from "../../../config.json";
-import abi from "../../../abi.json";
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const MAX_UINT256_VALUE =
-    "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+import {
+    getDefaultChainId,
+    displayInfo,
+    formatTokenAmount,
+    parseTokenAmount,
+    getCrowdsaleContract,
+    getErc20Contract,
+    tryReadTx,
+    tryTransaction,
+} from "../../../utils/utils";
+import { ZERO_ADDRESS, MAX_UINT256_VALUE } from "../../../utils/constants";
 
 const BuyToken = ({
     crowdsaleAddress,
@@ -27,148 +33,162 @@ const BuyToken = ({
     const [tokenSelected, setTokenSelected] = useState("");
     const [buyValue, setBuyValue] = useState("");
     const [tokensInReturn, setTokensInReturn] = useState(0);
+    const [tokensBought, setTokensBought] = useState("");
     const [acceptedLegualAgreement, setAcceptedLegualAgreement] =
         useState(false);
-    const [tokensBought, setTokensBought] = useState("");
     const [info, setInfo] = useState("");
+    const [readError, setReadError] = useState("");
 
-    const { account, library: provider, chainId, error } = useWeb3React();
+    const { account, library: provider, chainId } = useWeb3React();
+
+    const fetchPaymentTokens = async (contract) => {
+        const filter = contract.filters.PaymentCurrenciesAuthorized();
+        const events = await contract.queryFilter(filter);
+        return events[0].args.tokens;
+    };
+
+    const fetchTokenSymbol = useCallback(
+        async (token) => {
+            const contract = getErc20Contract(token, provider);
+            return await contract.symbol();
+        },
+        [provider]
+    );
+
+    const getTokenToSymbol = useCallback(
+        async (tokens) => {
+            const tokenToSymbol = new Map();
+            for (let i = 0; i < tokens.length; i += 1) {
+                const symbol = await fetchTokenSymbol(tokens[i]);
+                tokenToSymbol.set(tokens[i], symbol);
+            }
+            return tokenToSymbol;
+        },
+        [fetchTokenSymbol]
+    );
 
     useEffect(() => {
         const init = async () => {
-            const contract = getContractReader(crowdsaleAddress, abi.crowdsale);
-            const filter = contract.filters.PaymentCurrenciesAuthorized();
-            const events = await contract.queryFilter(filter);
-            const { tokens } = events[0].args;
+            const contract = getCrowdsaleContract(provider);
+            const paymentTokens = await fetchPaymentTokens(contract);
+            const tokenToSymbol = await getTokenToSymbol(paymentTokens);
 
-            for (let i = 0; i < tokens.length; i += 1) {
-                const contract = new ethers.Contract(
-                    tokens[i],
-                    abi.erc20,
-                    provider
-                );
-                const symbol = await contract.symbol();
-                setTokenToSymbol((prev) =>
-                    new Map(prev).set(tokens[i], symbol)
-                );
-            }
-
-            setPaymentTokens(tokens);
-            setTokenSelected(tokens[0]);
+            setPaymentTokens(paymentTokens);
+            setTokenSelected(paymentTokens[0]);
+            setTokenToSymbol(tokenToSymbol);
         };
         init();
-    }, []);
+    }, [provider, getTokenToSymbol]);
+
+    const updateTokensBought = useCallback(async () => {
+        const contract = getCrowdsaleContract(provider);
+        const tokensBought = await tryReadTx(
+            () => contract.getClaimableAmount(account),
+            setReadError
+        );
+        setTokensBought(tokensBought.toString());
+    }, [provider, account]);
 
     useEffect(() => {
-        const signer = provider.getSigner();
-        setSigner(signer);
+        setSigner(provider.getSigner());
         updateTokensBought();
-    }, [account]);
+    }, [account, provider, updateTokensBought]);
 
-    const updateTokensBought = async () => {
-        const contract = getContractReader(crowdsaleAddress, abi.crowdsale);
-        let tokensBought;
-        try {
-            tokensBought = await contract.getClaimableAmount(account);
-        } catch (err) {
-            console.error(err);
-            return;
-        }
-        setTokensBought(tokensBought.toString());
-    };
-
-    const getContractReader = (address, abi) => {
-        return new ethers.Contract(address, abi, provider);
-    };
-
-    const tokenSelectionHandler = (event) => {
-        setTokenSelected(event.target.value);
-    };
-
-    const valueHandler = (event) => {
+    const resetInfo = () => {
         if (info) {
             setInfo("");
         }
+    };
 
-        const { value } = event.target;
-        let valueFloat;
+    const parseStringToFloat = (value) => {
         if (value === "") {
-            valueFloat = 0;
+            return 0;
         } else {
-            valueFloat = parseFloat(value);
+            return parseFloat(value);
         }
+    };
 
-        if (valueFloat < minBuyValue) {
+    const checkMinBuyValue = (value) => {
+        if (value < minBuyValue) {
             setInfo(`You can't buy for less that ${minBuyValue}$`);
         }
+    };
 
-        const tokensInReturn = valueFloat * exchangeRate;
-
+    const checkMaxTokenAmountPerAddress = (tokensInReturn) => {
         if (tokensInReturn > maxTokenAmountPerAddress) {
             setInfo(
                 `You can't buy more than ${maxTokenAmountPerAddress} tokens`
             );
         }
+    };
+
+    const valueChangeHandler = ({ target }) => {
+        resetInfo();
+
+        const { value } = target;
+
+        let valueFloat = parseStringToFloat(value);
+        checkMinBuyValue(valueFloat);
+
+        const tokensInReturn = valueFloat * exchangeRate;
+        checkMaxTokenAmountPerAddress(tokensInReturn);
 
         setBuyValue(value);
         setTokensInReturn(tokensInReturn);
     };
 
-    const approveHandler = async () => {
-        const contract = new ethers.Contract(tokenSelected, abi.erc20, signer);
+    const sendApproveTx = async () => {
+        const contract = getErc20Contract(tokenSelected, signer);
+        const tx = await contract.approve(crowdsaleAddress, MAX_UINT256_VALUE);
+        await tx.wait();
+    };
 
-        try {
-            const tx = await contract.approve(
-                crowdsaleAddress,
-                MAX_UINT256_VALUE
-            );
-            await tx.wait();
-            displayInfo("Approval successfull");
-        } catch (err) {
-            console.error(err);
-            displayInfo("Transaction failed");
+    const approveHandler = async () => {
+        await tryTransaction(sendApproveTx, setInfo, "Approval successfull");
+    };
+
+    const checkBuyValue = () => {
+        if (buyValue === "") {
+            return false;
         }
+        return true;
+    };
+
+    const checkAcceptedLegualAgreement = () => {
+        if (!acceptedLegualAgreement) {
+            displayInfo(
+                setInfo,
+                "You need to accept legal agreement in order to buy tokens"
+            );
+            return false;
+        }
+        return true;
+    };
+
+    const sendBuyTokenTx = async () => {
+        const contract = getCrowdsaleContract(signer);
+        const parsedBuyValue = parseTokenAmount(buyValue);
+        const tx = await contract.buyToken(
+            tokenSelected,
+            parsedBuyValue,
+            ZERO_ADDRESS
+        );
+        await tx.wait();
     };
 
     const buyHandler = async () => {
-        if (buyValue === "") {
-            return;
-        } else if (!acceptedLegualAgreement) {
-            displayInfo(
-                "You need to accept legal agreement in order to buy tokens"
-            );
-            return;
-        }
+        if (!checkBuyValue()) return;
+        if (!checkAcceptedLegualAgreement()) return;
 
-        const contract = new ethers.Contract(
-            crowdsaleAddress,
-            abi.crowdsale,
-            signer
+        await tryTransaction(
+            sendBuyTokenTx,
+            setInfo,
+            "Tokens successfully bought"
         );
 
-        const parsedBuyValue = ethers.utils.parseUnits(buyValue, 18);
-        try {
-            const tx = await contract.buyToken(
-                tokenSelected,
-                parsedBuyValue,
-                ZERO_ADDRESS
-            );
-            await tx.wait();
-            setBuyValue("");
-            setTokensInReturn(0);
-            updateTokensBought();
-            displayInfo("Tokens successfully bought");
-        } catch (err) {
-            console.error(err);
-            displayInfo("Transaction failed");
-        }
-    };
-
-    const displayInfo = (info) => {
-        setInfo(info);
-        setTimeout(() => {
-            setInfo("");
-        }, 3000);
+        setBuyValue("");
+        setTokensInReturn(0);
+        updateTokensBought();
     };
 
     const tokenOptions = paymentTokens.map((token) => {
@@ -179,16 +199,14 @@ const BuyToken = ({
         );
     });
 
-    let defaultChainId;
-    if (config.network === "mainnet") defaultChainId = 56;
-    else if (config.network === "testnet") defaultChainId = 97;
+    const defaultChainId = getDefaultChainId();
 
-    let display = <p>Loading...</p>;
+    let display = <Loader />;
     if (chainId !== defaultChainId) {
         display = <p>Please switch to Binance Smart Chain</p>;
     } else if (tokenSelected) {
         display = (
-            <>
+            <div>
                 {acceptedLegualAgreement ? null : (
                     <LegalAgreement
                         acceptLegualAgreement={() =>
@@ -196,25 +214,31 @@ const BuyToken = ({
                         }
                     />
                 )}
-                <select value={tokenSelected} onChange={tokenSelectionHandler}>
+                <select
+                    value={tokenSelected}
+                    onChange={({ target }) => setTokenSelected(target.value)}
+                >
                     {tokenOptions}
                 </select>
                 <input
                     value={buyValue}
-                    onChange={valueHandler}
+                    onChange={valueChangeHandler}
                     placeholder="0.0000"
                 />
                 <button onClick={approveHandler}>
-                    Approve {tokenSelected.symbol}
+                    Approve {tokenToSymbol.get(tokenSelected)}
                 </button>
                 <button onClick={buyHandler}>Buy Tokens</button>
                 <p>You will get {tokensInReturn} tokens</p>
                 {info ? <p>{info}</p> : null}
-                <p>
-                    You bought {ethers.utils.formatUnits(tokensBought, 18)}{" "}
-                    tokens
-                </p>
-            </>
+                {readError ? (
+                    <p>{readError}</p>
+                ) : (
+                    <p>
+                        You can claim {formatTokenAmount(tokensBought)} tokens
+                    </p>
+                )}
+            </div>
         );
     }
 

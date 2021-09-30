@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { ethers } from "ethers";
 
 import WalletConnection from "../WalletConnection/WalletConnection";
 
-import { getCrowdsaleContract, displayInfo } from "../../utils/utils";
+import {
+    getCrowdsaleContract,
+    displayInfo,
+    tryTransaction,
+} from "../../utils/utils";
 
 const ReferralRegister = () => {
     const [signer, setSigner] = useState(undefined);
@@ -18,33 +21,32 @@ const ReferralRegister = () => {
         setSigner(signer);
     }, [account, provider]);
 
-    const registerHandler = async () => {
-        const contract = getCrowdsaleContract(signer);
-        if (await isAlreadyReferral(contract))
-            return displayInfo(
-                setInfo,
-                "Account already registered as referral"
-            );
-        await tryRegisterTx(contract);
-    };
-
-    const isAlreadyReferral = async (contract) => {
+    const isAlreadyReferral = async () => {
+        const contract = getCrowdsaleContract(provider);
         return await contract.isReferral(account);
     };
 
-    const tryRegisterTx = async (contract) => {
-        try {
-            await sendRegisterTx(contract);
-            displayInfo(setInfo, "Account successfully registered as referral");
-        } catch (err) {
-            console.error(err);
-            displayInfo(setInfo, "Transaction failed");
+    const checkIfAlreadyReferral = async () => {
+        if (await isAlreadyReferral()) {
+            displayInfo(setInfo, "Account already registered as referral");
+            return false;
         }
+        return true;
     };
 
-    const sendRegisterTx = async (contract) => {
+    const sendRegisterTx = async () => {
+        const contract = getCrowdsaleContract(signer);
         const tx = await contract.registerAsReferral();
         await tx.wait();
+    };
+
+    const registerHandler = async () => {
+        if (!(await checkIfAlreadyReferral())) return;
+        await tryTransaction(
+            sendRegisterTx,
+            setInfo,
+            "Account successfully registered as referral"
+        );
     };
 
     let display;

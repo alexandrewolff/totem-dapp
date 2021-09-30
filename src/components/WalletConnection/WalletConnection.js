@@ -13,13 +13,17 @@ const WalletConnection = () => {
         }
     };
 
+    const checkIfUnsupportedChain = (error) => {
+        return error instanceof UnsupportedChainIdError;
+    };
+
     let display;
-    const isUnsupportedChainIdError = error instanceof UnsupportedChainIdError;
-    if (account || isUnsupportedChainIdError) {
+    const unsupportedChain = checkIfUnsupportedChain(error);
+    if (account || unsupportedChain) {
         display = (
             <div>
                 {account ? <p>Account: {account}</p> : null}
-                {isUnsupportedChainIdError ? (
+                {unsupportedChain ? (
                     <p>Please switch to Binance Smart Chain</p>
                 ) : null}
                 <button onClick={deactivate}>Disconnect Wallet</button>

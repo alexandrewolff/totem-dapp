@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { ethers } from "ethers";
 
-import abi from "../../../abi.json";
-const SECONDS_PER_DAY = ethers.BigNumber.from("86400");
+import { SECONDS_PER_DAY } from "../../../utils/constants";
+import abi from "../../../utils/abi.json";
 
 const WithdrawToken = ({
     crowdsaleAddress,

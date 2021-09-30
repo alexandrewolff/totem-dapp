@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWeb3React } from "@web3-react/core";
 
+import Loader from "../UI/Loader";
 import WalletConnection from "../WalletConnection/WalletConnection";
 import SaleInfo from "./SaleInfo/SaleInfo";
 import BuyToken from "./BuyToken/BuyToken";
@@ -18,7 +19,7 @@ const Sale = ({ crowdsaleAddress }) => {
     const [tokensAtSale, setTokensAtSale] = useState(undefined);
     const [tokensSold, setTokensSold] = useState(undefined);
     const [updateRequired, setUpdateRequired] = useState(true);
-    const [warning, setWarning] = useState("");
+    const [readError, setReadError] = useState("");
 
     const {
         activate,
@@ -39,12 +40,8 @@ const Sale = ({ crowdsaleAddress }) => {
 
     const getSaleInfo = useCallback(async () => {
         const crowdsaleContract = getCrowdsaleContract(provider);
-        const saleSettings = await tryReadTx(() =>
-            crowdsaleContract.getSaleSettings()
-        );
-        const tokensSold = await tryReadTx(() =>
-            crowdsaleContract.getSoldAmount()
-        );
+        const saleSettings = await tryReadTx(crowdsaleContract.getSaleSettings);
+        const tokensSold = await tryReadTx(crowdsaleContract.getSoldAmount);
         const tokenContract = getErc20Contract(saleSettings.token, provider);
         const tokensAtSale = await tryReadTx(() =>
             tokenContract.balanceOf(crowdsaleAddress)
@@ -71,23 +68,24 @@ const Sale = ({ crowdsaleAddress }) => {
             return await call();
         } catch (err) {
             console.error(err);
-            setWarning("Transaction failed");
+            setReadError("Transaction failed");
         }
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 3;
+    const now = 2;
 
     let display;
-    if (!saleSettings) {
-        display = <p>Loading...</p>;
+    if (!saleSettings || !tokensAtSale || !tokensSold) {
+        display = <Loader />;
     } else if (now < saleSettings.saleStart) {
-        display = (
+        display = readError ? (
+            <p>{readError}</p>
+        ) : (
             <SaleInfo
                 saleSettings={saleSettings}
                 tokensAtSale={tokensAtSale}
                 tokensSold={tokensSold}
-                warning={warning}
             />
         );
     } else if (now < saleSettings.saleEnd) {
@@ -97,7 +95,6 @@ const Sale = ({ crowdsaleAddress }) => {
                     saleSettings={saleSettings}
                     tokensAtSale={tokensAtSale}
                     tokensSold={tokensSold}
-                    warning={warning}
                 />
                 <WalletConnection />
                 {account ? (
