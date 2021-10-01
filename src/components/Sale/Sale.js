@@ -73,7 +73,7 @@ const Sale = ({ crowdsaleAddress }) => {
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 2;
+    const now = 10;
 
     let display;
     if (!saleSettings || !tokensAtSale || !tokensSold) {
