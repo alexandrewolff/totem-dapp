@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWeb3React } from "@web3-react/core";
-// import Cookies from "js-cookie";
-
-// Cookies.set("referral", "value", { expires: 365 });
-// Cookies.get("referral");
-// Cookies.remove("referral");
+import Cookies from "js-cookie";
 
 import Loader from "../../UI/Loader";
 import LegalAgreement from "./LegalAgreement/LegalAgreement";
@@ -168,10 +164,12 @@ const BuyToken = ({
     const sendBuyTokenTx = async () => {
         const contract = getCrowdsaleContract(signer);
         const parsedBuyValue = parseTokenAmount(buyValue);
+        const referral = Cookies.get("referral");
+        const referralOrZero = referral ? referral : ZERO_ADDRESS;
         const tx = await contract.buyToken(
             tokenSelected,
             parsedBuyValue,
-            ZERO_ADDRESS
+            referralOrZero
         );
         await tx.wait();
     };

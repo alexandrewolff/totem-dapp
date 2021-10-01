@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWeb3React } from "@web3-react/core";
+import Cookies from "js-cookie";
 
 import Loader from "../UI/Loader";
 import WalletConnection from "../WalletConnection/WalletConnection";
@@ -28,6 +29,19 @@ const Sale = ({ crowdsaleAddress }) => {
         error,
         library: provider,
     } = useWeb3React();
+
+    const getReferral = () => {
+        const url = window.location.href;
+        const path = url.split("/");
+        return path[path.length - 1];
+    };
+
+    useEffect(() => {
+        const referral = getReferral();
+        if (referral) {
+            Cookies.set("referral", referral, { expires: 365 });
+        }
+    }, []);
 
     useEffect(() => {
         const activateNetwork = async () => {
@@ -73,7 +87,7 @@ const Sale = ({ crowdsaleAddress }) => {
     };
 
     // const now = Math.floor(new Date() / 1000);
-    const now = 10;
+    const now = 2;
 
     let display;
     if (!saleSettings || !tokensAtSale || !tokensSold) {
