@@ -2,5 +2,5 @@
     "network": "testnet",
     "bsc_mainnet_endpoint": "https://bsc-dataseed.binance.org/",
     "bsc_testnet_endpoint": "https://data-seed-prebsc-1-s2.binance.org:8545",
-    "crowdsaleAddress": "0xd831c119ECBC6BC4EF5d1361d4f8c009DC70c65d"
+    "crowdsaleAddress": "0x7E25766f49Fc53764A0682F845e4C0dF39785d97"
 }

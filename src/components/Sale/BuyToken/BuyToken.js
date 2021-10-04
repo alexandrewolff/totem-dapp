@@ -37,11 +37,19 @@ const BuyToken = ({
 
     const { account, library: provider, chainId } = useWeb3React();
 
-    const fetchPaymentTokens = async (contract) => {
+    const extractTokensFromEvents = (events) => {
+        const tokenSet = new Set();
+        events.forEach((event) => {
+            event.args.tokens.forEach((token) => tokenSet.add(token));
+        });
+        return Array.from(tokenSet);
+    };
+
+    const fetchPaymentTokens = useCallback(async (contract) => {
         const filter = contract.filters.PaymentCurrenciesAuthorized();
         const events = await contract.queryFilter(filter);
-        return events[0].args.tokens;
-    };
+        return extractTokensFromEvents(events);
+    }, []);
 
     const fetchTokenSymbol = useCallback(
         async (token) => {
@@ -74,7 +82,7 @@ const BuyToken = ({
             setTokenToSymbol(tokenToSymbol);
         };
         init();
-    }, [provider, getTokenToSymbol]);
+    }, [provider, fetchPaymentTokens, getTokenToSymbol]);
 
     const updateTokensBought = useCallback(async () => {
         const contract = getCrowdsaleContract(provider);
