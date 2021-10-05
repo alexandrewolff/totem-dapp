@@ -22,6 +22,7 @@ const BuyToken = ({
     minBuyValue,
     maxTokenAmountPerAddress,
     exchangeRate,
+    updateSaleSettings,
 }) => {
     const [signer, setSigner] = useState(undefined);
     const [paymentTokens, setPaymentTokens] = useState([]);
@@ -113,15 +114,19 @@ const BuyToken = ({
     };
 
     const checkMinBuyValue = (value) => {
-        if (value < minBuyValue) {
-            setInfo(`You can't buy for less that ${minBuyValue}$`);
+        const formatedMinBuyValue = formatTokenAmount(minBuyValue);
+        if (value < parseFloat(formatedMinBuyValue)) {
+            setInfo(`You can't buy for less that ${formatedMinBuyValue}$`);
         }
     };
 
     const checkMaxTokenAmountPerAddress = (tokensInReturn) => {
-        if (tokensInReturn > maxTokenAmountPerAddress) {
+        const formatedMaxTokenAmountPerAddress = formatTokenAmount(
+            maxTokenAmountPerAddress
+        );
+        if (tokensInReturn > parseInt(formatedMaxTokenAmountPerAddress)) {
             setInfo(
-                `You can't buy more than ${maxTokenAmountPerAddress} tokens`
+                `You can't buy more than ${formatedMaxTokenAmountPerAddress} tokens`
             );
         }
     };
@@ -195,6 +200,7 @@ const BuyToken = ({
         setBuyValue("");
         setTokensInReturn(0);
         updateTokensBought();
+        updateSaleSettings();
     };
 
     const tokenOptions = paymentTokens.map((token) => {

@@ -86,8 +86,8 @@ const Sale = ({ crowdsaleAddress }) => {
         }
     };
 
-    // const now = Math.floor(new Date() / 1000);
-    const now = 2;
+    const now = Math.floor(new Date() / 1000);
+    const thereAreTokensLeft = !tokensAtSale.sub(tokensSold).eq(0);
 
     let display;
     if (!saleSettings || !tokensAtSale || !tokensSold) {
@@ -102,7 +102,7 @@ const Sale = ({ crowdsaleAddress }) => {
                 tokensSold={tokensSold}
             />
         );
-    } else if (now < saleSettings.saleEnd) {
+    } else if (now < saleSettings.saleEnd && thereAreTokensLeft) {
         display = (
             <div>
                 <SaleInfo
@@ -119,6 +119,7 @@ const Sale = ({ crowdsaleAddress }) => {
                             saleSettings.maxTokenAmountPerAddress
                         }
                         exchangeRate={saleSettings.exchangeRate}
+                        updateSaleSettings={() => setUpdateRequired(true)}
                     />
                 ) : null}
             </div>
