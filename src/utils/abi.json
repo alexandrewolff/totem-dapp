@@ -6,10 +6,84 @@
                     "internalType": "address",
                     "name": "_token",
                     "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_wallet",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_saleStart",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_saleEnd",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_withdrawalStart",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_withdrawPeriodDuration",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_withdrawPeriodNumber",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_minBuyValue",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_maxTokenAmountPerAddress",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_exchangeRate",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_referralRewardPercentage",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_amountToSell",
+                    "type": "uint256"
                 }
             ],
             "stateMutability": "nonpayable",
             "type": "constructor"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "newAmountToSell",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "updater",
+                    "type": "address"
+                }
+            ],
+            "name": "AmountToSellUpdated",
+            "type": "event"
         },
         {
             "anonymous": false,
@@ -326,8 +400,7 @@
                 }
             ],
             "stateMutability": "view",
-            "type": "function",
-            "constant": true
+            "type": "function"
         },
         {
             "inputs": [],
@@ -409,6 +482,11 @@
                             "internalType": "uint256",
                             "name": "referralRewardPercentage",
                             "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amountToSell",
+                            "type": "uint256"
                         }
                     ],
                     "internalType": "struct SaleSettings",
@@ -417,8 +495,7 @@
                 }
             ],
             "stateMutability": "view",
-            "type": "function",
-            "constant": true
+            "type": "function"
         },
         {
             "inputs": [],
@@ -431,8 +508,7 @@
                 }
             ],
             "stateMutability": "view",
-            "type": "function",
-            "constant": true
+            "type": "function"
         },
         {
             "inputs": [
@@ -451,8 +527,7 @@
                 }
             ],
             "stateMutability": "view",
-            "type": "function",
-            "constant": true
+            "type": "function"
         },
         {
             "inputs": [
@@ -471,8 +546,7 @@
                 }
             ],
             "stateMutability": "view",
-            "type": "function",
-            "constant": true
+            "type": "function"
         },
         {
             "inputs": [
@@ -491,28 +565,7 @@
                 }
             ],
             "stateMutability": "view",
-            "type": "function",
-            "constant": true
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "account",
-                    "type": "address"
-                }
-            ],
-            "name": "isReferral",
-            "outputs": [
-                {
-                    "internalType": "bool",
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function",
-            "constant": true
+            "type": "function"
         },
         {
             "inputs": [
@@ -647,19 +700,25 @@
         {
             "inputs": [
                 {
+                    "internalType": "uint256",
+                    "name": "newAmountToSell",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setAmountToSell",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
                     "internalType": "address[]",
                     "name": "tokens",
                     "type": "address[]"
                 }
             ],
             "name": "authorizePaymentCurrencies",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "registerAsReferral",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"

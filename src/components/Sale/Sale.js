@@ -75,9 +75,11 @@ const Sale = ({ crowdsaleAddress }) => {
         }
     };
 
-    const now = Math.floor(new Date() / 1000);
+    // const now = Math.floor(new Date() / 1000);
+    const now = 2;
     let thereAreTokensLeft = true;
-    if (saleSettings.amountToSell && tokensSold) {
+    console.log(saleSettings);
+    if (saleSettings?.amountToSell && tokensSold) {
         thereAreTokensLeft = !saleSettings.amountToSell.sub(tokensSold).eq(0);
     }
 

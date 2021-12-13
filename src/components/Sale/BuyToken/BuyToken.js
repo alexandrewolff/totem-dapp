@@ -6,7 +6,7 @@ import Loader from "../../UI/Loader";
 import LegalAgreement from "./LegalAgreement/LegalAgreement";
 
 import config from "../../../config.json";
-import tokensConfig from "../../../tokens.json";
+import paymentTokensConfig from "../../../paymentTokens.json";
 
 import {
     getDefaultChainId,
@@ -56,8 +56,8 @@ const BuyToken = ({
     useEffect(() => {
         const tokens =
             config.network === "mainnet"
-                ? tokensConfig.mainnet
-                : tokensConfig.testnet;
+                ? paymentTokensConfig.mainnet
+                : paymentTokensConfig.testnet;
         const paymentTokens = parsePaymentTokens(tokens);
         const tokenToSymbol = parseTokenToSymbol(tokens);
 
