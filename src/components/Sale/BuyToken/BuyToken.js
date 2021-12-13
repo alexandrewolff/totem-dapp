@@ -5,6 +5,9 @@ import Cookies from "js-cookie";
 import Loader from "../../UI/Loader";
 import LegalAgreement from "./LegalAgreement/LegalAgreement";
 
+import config from "../../../config.json";
+import tokensConfig from "../../../tokens.json";
+
 import {
     getDefaultChainId,
     displayInfo,
@@ -27,7 +30,7 @@ const BuyToken = ({
     const [signer, setSigner] = useState(undefined);
     const [paymentTokens, setPaymentTokens] = useState([]);
     const [tokenToSymbol, setTokenToSymbol] = useState(new Map());
-    const [tokenSelected, setTokenSelected] = useState("");
+    const [tokenSelected, setTokenSelected] = useState({});
     const [buyValue, setBuyValue] = useState("");
     const [tokensInReturn, setTokensInReturn] = useState(0);
     const [tokensBought, setTokensBought] = useState("");
@@ -38,52 +41,30 @@ const BuyToken = ({
 
     const { account, library: provider, chainId } = useWeb3React();
 
-    const extractTokensFromEvents = (events) => {
-        const tokenSet = new Set();
-        events.forEach((event) => {
-            event.args.tokens.forEach((token) => tokenSet.add(token));
-        });
-        return Array.from(tokenSet);
+    const parsePaymentTokens = (tokens) => {
+        return tokens.map((token) => token.address);
     };
 
-    const fetchPaymentTokens = useCallback(async (contract) => {
-        const filter = contract.filters.PaymentCurrenciesAuthorized();
-        const events = await contract.queryFilter(filter);
-        return extractTokensFromEvents(events);
-    }, []);
-
-    const fetchTokenSymbol = useCallback(
-        async (token) => {
-            const contract = getErc20Contract(token, provider);
-            return await contract.symbol();
-        },
-        [provider]
-    );
-
-    const getTokenToSymbol = useCallback(
-        async (tokens) => {
-            const tokenToSymbol = new Map();
-            for (let i = 0; i < tokens.length; i += 1) {
-                const symbol = await fetchTokenSymbol(tokens[i]);
-                tokenToSymbol.set(tokens[i], symbol);
-            }
-            return tokenToSymbol;
-        },
-        [fetchTokenSymbol]
-    );
+    const parseTokenToSymbol = (tokens) => {
+        const tokenToSymbol = new Map();
+        tokens.forEach((token) => {
+            tokenToSymbol.set(token.address, token.symbol);
+        });
+        return tokenToSymbol;
+    };
 
     useEffect(() => {
-        const init = async () => {
-            const contract = getCrowdsaleContract(provider);
-            const paymentTokens = await fetchPaymentTokens(contract);
-            const tokenToSymbol = await getTokenToSymbol(paymentTokens);
+        const tokens =
+            config.network === "mainnet"
+                ? tokensConfig.mainnet
+                : tokensConfig.testnet;
+        const paymentTokens = parsePaymentTokens(tokens);
+        const tokenToSymbol = parseTokenToSymbol(tokens);
 
-            setPaymentTokens(paymentTokens);
-            setTokenSelected(paymentTokens[0]);
-            setTokenToSymbol(tokenToSymbol);
-        };
-        init();
-    }, [provider, fetchPaymentTokens, getTokenToSymbol]);
+        setPaymentTokens(paymentTokens);
+        setTokenSelected(paymentTokens[0]);
+        setTokenToSymbol(tokenToSymbol);
+    }, []);
 
     const updateTokensBought = useCallback(async () => {
         const contract = getCrowdsaleContract(provider);
@@ -247,7 +228,8 @@ const BuyToken = ({
                     <p>{readError}</p>
                 ) : (
                     <p>
-                        You can claim {formatTokenAmount(tokensBought)} tokens
+                        You can claim {formatTokenAmount(tokensBought || "0")}{" "}
+                        tokens
                     </p>
                 )}
             </div>

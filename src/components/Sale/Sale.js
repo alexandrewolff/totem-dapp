@@ -8,16 +8,11 @@ import SaleInfo from "./SaleInfo/SaleInfo";
 import BuyToken from "./BuyToken/BuyToken";
 import WithdrawToken from "./WithdrawToken/WithdrawToken";
 
-import {
-    formatTimestamp,
-    getCrowdsaleContract,
-    getErc20Contract,
-} from "../../utils/utils";
+import { formatTimestamp, getCrowdsaleContract } from "../../utils/utils";
 import { network } from "../../utils/walletConnectors";
 
 const Sale = ({ crowdsaleAddress }) => {
     const [saleSettings, setSaleSettings] = useState(undefined);
-    const [tokensAtSale, setTokensAtSale] = useState(undefined);
     const [tokensSold, setTokensSold] = useState(undefined);
     const [updateRequired, setUpdateRequired] = useState(true);
     const [readError, setReadError] = useState("");
@@ -56,19 +51,13 @@ const Sale = ({ crowdsaleAddress }) => {
         const crowdsaleContract = getCrowdsaleContract(provider);
         const saleSettings = await tryReadTx(crowdsaleContract.getSaleSettings);
         const tokensSold = await tryReadTx(crowdsaleContract.getSoldAmount);
-        const tokenContract = getErc20Contract(saleSettings.token, provider);
-        const tokensAtSale = await tryReadTx(() =>
-            tokenContract.balanceOf(crowdsaleAddress)
-        );
-        return { saleSettings, tokensSold, tokensAtSale };
-    }, [provider, crowdsaleAddress]);
+        return { saleSettings, tokensSold };
+    }, [provider]);
 
     useEffect(() => {
         const fetchContractInfo = async () => {
-            const { saleSettings, tokensSold, tokensAtSale } =
-                await getSaleInfo();
+            const { saleSettings, tokensSold } = await getSaleInfo();
             setSaleSettings(saleSettings);
-            setTokensAtSale(tokensAtSale);
             setTokensSold(tokensSold);
             setUpdateRequired(false);
         };
@@ -87,10 +76,13 @@ const Sale = ({ crowdsaleAddress }) => {
     };
 
     const now = Math.floor(new Date() / 1000);
-    const thereAreTokensLeft = !tokensAtSale.sub(tokensSold).eq(0);
+    let thereAreTokensLeft = true;
+    if (saleSettings.amountToSell && tokensSold) {
+        thereAreTokensLeft = !saleSettings.amountToSell.sub(tokensSold).eq(0);
+    }
 
     let display;
-    if (!saleSettings || !tokensAtSale || !tokensSold) {
+    if (!saleSettings || !saleSettings.amountToSell || !tokensSold) {
         display = <Loader />;
     } else if (now < saleSettings.saleStart) {
         display = readError ? (
@@ -98,7 +90,7 @@ const Sale = ({ crowdsaleAddress }) => {
         ) : (
             <SaleInfo
                 saleSettings={saleSettings}
-                tokensAtSale={tokensAtSale}
+                tokensAtSale={saleSettings.amountToSell}
                 tokensSold={tokensSold}
             />
         );
@@ -107,7 +99,7 @@ const Sale = ({ crowdsaleAddress }) => {
             <div>
                 <SaleInfo
                     saleSettings={saleSettings}
-                    tokensAtSale={tokensAtSale}
+                    tokensAtSale={saleSettings.amountToSell}
                     tokensSold={tokensSold}
                 />
                 <WalletConnection />
