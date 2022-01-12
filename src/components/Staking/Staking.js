@@ -1,0 +1,64 @@
+import { useState, useEffect } from "react";
+import { useWeb3React } from "@web3-react/core";
+
+import Loader from "../UI/Loader";
+import Pool from "./Pool/Pool";
+
+import { getStakingContract } from "../../utils/utils";
+import { network } from "../../utils/walletConnectors";
+
+const Staking = () => {
+    const [pools, setPools] = useState(undefined);
+    const [readError, setReadError] = useState("");
+
+    const { activate, active, error, library: provider } = useWeb3React();
+
+    useEffect(() => {
+        const activateNetwork = async () => {
+            await activate(network);
+        };
+        if (!active && !error) {
+            activateNetwork();
+        }
+    }, [active, error, activate]);
+
+    useEffect(() => {
+        const fetchPools = async () => {
+            const stakingContract = getStakingContract(provider);
+            console.log("get pools"); // REMOVE
+            const pools = await tryReadTx(stakingContract.getPools);
+            setPools(pools);
+        };
+        if (provider) fetchPools();
+    }, [provider, setPools]);
+
+    // duplicated with Sale.js
+    const tryReadTx = async (call) => {
+        try {
+            return await call();
+        } catch (err) {
+            console.error(err);
+            setReadError("Read failed");
+        }
+    };
+
+    let display;
+    if (readError) {
+        display = <p>{readError}</p>;
+    } else if (!pools) {
+        display = <Loader />;
+    } else if (pools.length === 0) {
+        display = <p>No pool has been created</p>;
+    } else {
+        display = pools.map((pool, index) => <Pool key={index} {...pool} />);
+    }
+
+    return (
+        <div>
+            <h1>Staking Pools</h1>
+            {display}
+        </div>
+    );
+};
+
+export default Staking;

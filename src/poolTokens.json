@@ -1,0 +1,11 @@
+{
+    "mainnet": {},
+    "testnet": {
+        "0x8B567E4939A7cadcff64958FE4AA422574776e1d": "Token 1",
+        "0xD6d7DbB2923a8c320cf4643c276cd59de3fA5b56": "Token 2",
+        "0x56837e75B7f5AF047B864b95586473fcBdD6F056": "Token 3",
+        "0x640425295cC69d2f4Cc51bADb8C102143F49A9bd": "Token 4",
+        "0xF2b2dc3f43bc23f8ABfD6ef8F3eE2CdAAcC7822E": "Token 5",
+        "0x3B435e76AfC88408a89C1932D4830c6944701a9A": "Token 6"
+    }
+}

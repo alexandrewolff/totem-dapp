@@ -19,6 +19,10 @@ export const formatTimestamp = (timestamp) => {
     return new Date(timestamp.toNumber() * 1000).toDateString();
 };
 
+export const formatPercentage = (percentage) => {
+    return percentage.toNumber() / 10;
+};
+
 export const formatTokenAmount = (tokenAmount) => {
     return ethers.utils.formatUnits(tokenAmount, 18);
 };
@@ -33,6 +37,10 @@ export const computePricePerToken = (exchangeRate) => {
 
 export const getCrowdsaleContract = (provider) => {
     return getContract(config.crowdsaleAddress, abi.crowdsale, provider);
+};
+
+export const getStakingContract = (provider) => {
+    return getContract(config.stakingAddress, abi.staking, provider);
 };
 
 export const getErc20Contract = (address, provider) => {

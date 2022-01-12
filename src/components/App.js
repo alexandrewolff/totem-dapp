@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 
 import ReferralRegister from "./ReferralRegister/ReferralRegister";
 import Sale from "./Sale/Sale";
+import Staking from "./Staking/Staking";
 
 import config from "../config.json";
 
@@ -18,8 +19,9 @@ function App() {
     return (
         <Web3ReactProvider getLibrary={getLibrary}>
             <div className="App">
-                <ReferralRegister crowdsaleAddress={config.crowdsaleAddress} />
-                <Sale crowdsaleAddress={config.crowdsaleAddress} />
+                {/* <ReferralRegister crowdsaleAddress={config.crowdsaleAddress} /> */}
+                {/* <Sale crowdsaleAddress={config.crowdsaleAddress} /> */}
+                <Staking stakingAddress={config.stakingAddress} />
             </div>
         </Web3ReactProvider>
     );
