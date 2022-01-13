@@ -14,16 +14,24 @@ const Pool = ({
     minimumDeposit,
     currentBlock,
 }) => {
+    // Multiply by 1000 to get ms
     const formatedLockTime = humanizeDuration(lockTime * 1000);
-    const poolState =
-        lastRewardedBlock !== 0 && lastRewardedBlock <= currentBlock ? (
+    console.log({ currentBlock });
+    let poolState;
+    if (lastRewardedBlock === 0) {
+        poolState = null;
+    } else if (lastRewardedBlock >= currentBlock) {
+        // Multiply by 3000 because blocktime on BSC is 3 seconds
+        poolState = (
             <p>
                 Reward will stop in approximativaly{" "}
                 {humanizeDuration((lastRewardedBlock - currentBlock) * 3000)}
             </p>
-        ) : (
-            <p>Pool is closed</p>
         );
+    } else {
+        poolState = <p>Reward ended</p>;
+    }
+
     return (
         <div>
             <h3>{poolTokensConfig[network][token]}</h3>
