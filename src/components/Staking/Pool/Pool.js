@@ -3,6 +3,7 @@ import humanizeDuration from "humanize-duration";
 
 import PoolState from "./PoolState/PoolState";
 import AccountState from "./AccountState/AccountState";
+import Interactions from "./Interactions/Interactions";
 
 import { formatPercentage, formatTokenAmount } from "../../../utils/utils";
 import { network } from "../../../config.json";
@@ -35,7 +36,12 @@ const Pool = ({
                 lastRewardedBlock={lastRewardedBlock}
                 currentBlock={currentBlock}
             />
-            {account ? <AccountState poolId={poolId} /> : null}
+            {account ? (
+                <div>
+                    <AccountState poolId={poolId} />
+                    <Interactions />
+                </div>
+            ) : null}
         </div>
     );
 };
