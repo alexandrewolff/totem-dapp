@@ -5,7 +5,7 @@ import Loader from "../UI/Loader";
 import Pool from "./Pool/Pool";
 import WalletConnection from "../WalletConnection/WalletConnection";
 
-import { getStakingContract } from "../../utils/utils";
+import { getStakingContract, tryReadTx } from "../../utils/utils";
 import { network } from "../../utils/walletConnectors";
 
 const Staking = () => {
@@ -37,8 +37,10 @@ const Staking = () => {
         };
         const fetchPools = async () => {
             const stakingContract = getStakingContract(provider);
-            console.log("get pools"); // REMOVE
-            const pools = await tryReadTx(stakingContract.getPools);
+            const pools = await tryReadTx(
+                stakingContract.getPools,
+                setReadError
+            );
             setPools(pools);
         };
         if (provider) {
@@ -46,16 +48,6 @@ const Staking = () => {
             fetchPools();
         }
     }, [provider, account, setPools]);
-
-    // duplicated with Sale.js
-    const tryReadTx = async (call) => {
-        try {
-            return await call();
-        } catch (err) {
-            console.error(err);
-            setReadError("Read failed");
-        }
-    };
 
     let display;
     if (readError) {
@@ -65,13 +57,12 @@ const Staking = () => {
     } else if (pools.length === 0) {
         display = <p>No pool has been created</p>;
     } else {
-        display = pools.map((pool, id) => (
+        display = pools.map((pool, poolId) => (
             <Pool
-                key={id}
-                id={id}
+                key={poolId}
+                poolId={poolId}
                 {...pool}
                 currentBlock={currentBlock}
-                account={account}
             />
         ));
     }
