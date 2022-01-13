@@ -8,6 +8,7 @@ import { getStakingContract } from "../../utils/utils";
 import { network } from "../../utils/walletConnectors";
 
 const Staking = () => {
+    const [currentBlock, setCurrentBlock] = useState(undefined);
     const [pools, setPools] = useState(undefined);
     const [readError, setReadError] = useState("");
 
@@ -23,13 +24,20 @@ const Staking = () => {
     }, [active, error, activate]);
 
     useEffect(() => {
+        const getCurrentBlock = async () => {
+            const currentBlock = await provider.getBlockNumber();
+            setCurrentBlock(currentBlock);
+        };
         const fetchPools = async () => {
             const stakingContract = getStakingContract(provider);
             console.log("get pools"); // REMOVE
             const pools = await tryReadTx(stakingContract.getPools);
             setPools(pools);
         };
-        if (provider) fetchPools();
+        if (provider) {
+            getCurrentBlock();
+            fetchPools();
+        }
     }, [provider, setPools]);
 
     // duplicated with Sale.js
@@ -50,7 +58,14 @@ const Staking = () => {
     } else if (pools.length === 0) {
         display = <p>No pool has been created</p>;
     } else {
-        display = pools.map((pool, index) => <Pool key={index} {...pool} />);
+        display = pools.map((pool, index) => (
+            <Pool
+                key={index}
+                index={index}
+                {...pool}
+                currentBlock={currentBlock}
+            />
+        ));
     }
 
     return (

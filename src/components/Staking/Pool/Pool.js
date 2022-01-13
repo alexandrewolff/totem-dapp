@@ -5,6 +5,7 @@ import { network } from "../../../config.json";
 import poolTokensConfig from "../../../poolTokens.json";
 
 const Pool = ({
+    index, // REMOVE
     token,
     amountPerReward,
     rewardPerBlock,
@@ -14,9 +15,9 @@ const Pool = ({
     minimumDeposit,
     currentBlock,
 }) => {
+    console.log(`mount pool ${index}`); // REMOVE
     // Multiply by 1000 to get ms
     const formatedLockTime = humanizeDuration(lockTime * 1000);
-    console.log({ currentBlock });
     let poolState;
     if (lastRewardedBlock === 0) {
         poolState = null;
