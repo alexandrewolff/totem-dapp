@@ -3,6 +3,7 @@ import { useWeb3React } from "@web3-react/core";
 
 import Loader from "../UI/Loader";
 import Pool from "./Pool/Pool";
+import WalletConnection from "../WalletConnection/WalletConnection";
 
 import { getStakingContract } from "../../utils/utils";
 import { network } from "../../utils/walletConnectors";
@@ -12,7 +13,13 @@ const Staking = () => {
     const [pools, setPools] = useState(undefined);
     const [readError, setReadError] = useState("");
 
-    const { activate, active, error, library: provider } = useWeb3React();
+    const {
+        activate,
+        active,
+        error,
+        account,
+        library: provider,
+    } = useWeb3React();
 
     useEffect(() => {
         const activateNetwork = async () => {
@@ -38,7 +45,7 @@ const Staking = () => {
             getCurrentBlock();
             fetchPools();
         }
-    }, [provider, setPools]);
+    }, [provider, account, setPools]);
 
     // duplicated with Sale.js
     const tryReadTx = async (call) => {
@@ -58,12 +65,13 @@ const Staking = () => {
     } else if (pools.length === 0) {
         display = <p>No pool has been created</p>;
     } else {
-        display = pools.map((pool, index) => (
+        display = pools.map((pool, id) => (
             <Pool
-                key={index}
-                index={index}
+                key={id}
+                id={id}
                 {...pool}
                 currentBlock={currentBlock}
+                account={account}
             />
         ));
     }
@@ -71,6 +79,7 @@ const Staking = () => {
     return (
         <div>
             <h1>Staking Pools</h1>
+            <WalletConnection />
             {display}
         </div>
     );
