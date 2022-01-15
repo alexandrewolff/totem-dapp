@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { getStakingContract, tryTransaction } from "../../../../utils/utils";
+import { getStakingContract, tryTransaction } from "../../../../../utils/utils";
 
-const Interactions = ({ poolId, signer }) => {
+const Interactions = ({ poolId, signer, updateAccountState }) => {
     const [depositAmount, setDepositAmount] = useState("");
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [info, setInfo] = useState("");
@@ -19,30 +19,34 @@ const Interactions = ({ poolId, signer }) => {
         }
     };
 
-    const depositHandler = () => {
+    const depositHandler = async () => {
         const stakingContract = getStakingContract(signer);
-        tryTransaction(
+        await tryTransaction(
             () => stakingContract.deposit(poolId, depositAmount),
             setInfo,
             "Tokens successfully deposited"
         );
+        updateAccountState();
     };
-    const withdrawHandler = () => {
+    const withdrawHandler = async () => {
         const stakingContract = getStakingContract(signer);
-        tryTransaction(
+        await tryTransaction(
             () => stakingContract.withdraw(poolId, withdrawAmount),
             setInfo,
             "Tokens successfully Withdrew"
         );
+        updateAccountState();
     };
-    const harvestHandler = () => {
+    const harvestHandler = async () => {
         const stakingContract = getStakingContract(signer);
-        tryTransaction(
+        await tryTransaction(
             () => stakingContract.harvest(poolId),
             setInfo,
             "Reward successfully harvested"
         );
+        updateAccountState();
     };
+
     return (
         <div>
             <input

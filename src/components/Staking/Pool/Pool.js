@@ -3,7 +3,6 @@ import humanizeDuration from "humanize-duration";
 
 import PoolState from "./PoolState/PoolState";
 import AccountState from "./AccountState/AccountState";
-import Interactions from "./Interactions/Interactions";
 
 import { formatPercentage, formatTokenAmount } from "../../../utils/utils";
 import { network } from "../../../config.json";
@@ -39,8 +38,7 @@ const Pool = ({
             />
             {account ? (
                 <div>
-                    <AccountState poolId={poolId} />
-                    <Interactions poolId={poolId} signer={signer} />
+                    <AccountState poolId={poolId} signer={signer} />
                 </div>
             ) : null}
         </div>
