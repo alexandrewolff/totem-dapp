@@ -3,5 +3,5 @@
     "bsc_mainnet_endpoint": "https://bsc-dataseed.binance.org/",
     "bsc_testnet_endpoint": "https://speedy-nodes-nyc.moralis.io/7500a707f6d2faaac59b8aa4/bsc/testnet",
     "crowdsaleAddress": "0x7E25766f49Fc53764A0682F845e4C0dF39785d97",
-    "stakingAddress": "0x507214228E8d91faf0C7b799e977828De6D63d5b"
+    "stakingAddress": "0xa9ec114151B12Cc492f30eebfFfff2Cd7bCF09E2"
 }

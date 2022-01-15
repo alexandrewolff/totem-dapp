@@ -7,7 +7,7 @@ import { formatTokenAmount, getStakingContract } from "../../../../utils/utils";
 
 const AccountState = ({ poolId }) => {
     const [deposit, setDeposit] = useState(null);
-    const [pendingReward, setPendingReward] = useState(null);
+    const [pendingReward, setPendingReward] = useState(undefined);
 
     const { account, library: provider } = useWeb3React();
 
@@ -28,7 +28,7 @@ const AccountState = ({ poolId }) => {
 
     useEffect(() => {
         getDeposit();
-        // getPendingReward();
+        getPendingReward();
     }, [account, getDeposit, getPendingReward]);
 
     let accountState = null;
@@ -40,13 +40,13 @@ const AccountState = ({ poolId }) => {
                     <p>
                         Unlocked in :{" "}
                         {humanizeDuration(
-                            deposit.lockTimeEnd.sub(new Date().getTime())
-                        ).mul(1000)}
+                            deposit.lockTimeEnd * 1000 - new Date().getTime()
+                        )}
                     </p>
                 ) : null}
                 <p>
                     Pending reward:{" "}
-                    {pendingReward ? pendingReward.toString() : 0}
+                    {pendingReward ? formatTokenAmount(pendingReward) : 0}
                 </p>
             </div>
         );

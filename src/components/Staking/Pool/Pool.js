@@ -25,7 +25,7 @@ const Pool = ({
     // Multiply `lockTime` by 1000 to get ms for the library
     return (
         <div>
-            <h3>{poolTokensConfig[network][token]}</h3>
+            <h3>{poolTokensConfig[network][token] || token}</h3>
             <p>
                 Minimum deposit:{" "}
                 {formatTokenAmount(minimumDeposit.toString()).toString()}
