@@ -1,39 +1,66 @@
 import { useState } from "react";
-import { useWeb3React } from "@web3-react/core";
-import TransactionCaller from "./TransactionCaller/TransactionCaller";
 
 import { getStakingContract, tryTransaction } from "../../../../utils/utils";
 
-const Interactions = ({ poolId }) => {
+const Interactions = ({ poolId, signer }) => {
+    const [depositAmount, setDepositAmount] = useState("");
+    const [withdrawAmount, setWithdrawAmount] = useState("");
     const [info, setInfo] = useState("");
 
-    const { library: provider } = useWeb3React();
+    const valueChangeHandler = ({ target }) => {
+        const { name, value } = target;
+        switch (name) {
+            case "deposit":
+                setDepositAmount(value);
+                break;
+            case "withdraw":
+                setWithdrawAmount(value);
+                break;
+        }
+    };
 
-    const depositHandler = (amount) => {
-        const stakingContract = getStakingContract(provider);
+    const depositHandler = () => {
+        const stakingContract = getStakingContract(signer);
         tryTransaction(
-            stakingContract.deposit(poolId, amount),
+            () => stakingContract.deposit(poolId, depositAmount),
             setInfo,
             "Tokens successfully deposited"
         );
     };
     const withdrawHandler = () => {
-        console.log("withdraw");
+        const stakingContract = getStakingContract(signer);
+        tryTransaction(
+            () => stakingContract.withdraw(poolId, withdrawAmount),
+            setInfo,
+            "Tokens successfully Withdrew"
+        );
     };
     const harvestHandler = () => {
-        console.log("harvest");
+        const stakingContract = getStakingContract(signer);
+        tryTransaction(
+            () => stakingContract.harvest(poolId),
+            setInfo,
+            "Reward successfully harvested"
+        );
     };
     return (
         <div>
-            <TransactionCaller action={depositHandler}>
-                Deposit
-            </TransactionCaller>
-            <TransactionCaller action={withdrawHandler}>
-                Withdraw
-            </TransactionCaller>
-            <TransactionCaller action={harvestHandler}>
-                Harvest
-            </TransactionCaller>
+            <input
+                name="deposit"
+                value={depositAmount}
+                onChange={valueChangeHandler}
+                placeholder="0.0000"
+            />
+
+            <button onClick={depositHandler}>Deposit</button>
+            <input
+                name="withdraw"
+                value={withdrawAmount}
+                onChange={valueChangeHandler}
+                placeholder="0.0000"
+            />
+            <button onClick={withdrawHandler}>Withdraw</button>
+            <button onClick={harvestHandler}>Harvest</button>
             {info ? <p>{info}</p> : null}
         </div>
     );

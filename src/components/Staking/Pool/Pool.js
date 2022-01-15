@@ -19,6 +19,7 @@ const Pool = ({
     lockTime,
     minimumDeposit,
     currentBlock,
+    signer,
 }) => {
     const { account } = useWeb3React();
 
@@ -39,7 +40,7 @@ const Pool = ({
             {account ? (
                 <div>
                     <AccountState poolId={poolId} />
-                    <Interactions />
+                    <Interactions poolId={poolId} signer={signer} />
                 </div>
             ) : null}
         </div>

@@ -62,7 +62,8 @@ export const tryReadTx = async (call, setError) => {
 
 export const tryTransaction = async (call, setInfo, successMessage) => {
     try {
-        await call();
+        const tx = await call();
+        await tx.wait();
         displayInfo(setInfo, successMessage);
     } catch (err) {
         console.error(err);

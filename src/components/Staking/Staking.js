@@ -11,6 +11,7 @@ import { network } from "../../utils/walletConnectors";
 const Staking = () => {
     const [currentBlock, setCurrentBlock] = useState(undefined);
     const [pools, setPools] = useState(undefined);
+    const [signer, setSigner] = useState(undefined);
     const [readError, setReadError] = useState("");
 
     const {
@@ -20,6 +21,10 @@ const Staking = () => {
         account,
         library: provider,
     } = useWeb3React();
+
+    useEffect(() => {
+        if (account) setSigner(provider.getSigner());
+    }, [provider, account]);
 
     useEffect(() => {
         const activateNetwork = async () => {
@@ -63,6 +68,7 @@ const Staking = () => {
                 poolId={poolId}
                 {...pool}
                 currentBlock={currentBlock}
+                signer={signer}
             />
         ));
     }
