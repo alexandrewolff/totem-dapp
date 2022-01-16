@@ -6,7 +6,7 @@ import Interactions from "./Interactions/Interactions";
 
 import { formatTokenAmount, getStakingContract } from "../../../../utils/utils";
 
-const AccountState = ({ poolId, signer }) => {
+const AccountState = ({ poolId, signer, minimumDeposit }) => {
     const [deposit, setDeposit] = useState(null);
     const [pendingReward, setPendingReward] = useState(undefined);
     const [updateRequired, setUpdateRequired] = useState(false);
@@ -44,6 +44,8 @@ const AccountState = ({ poolId, signer }) => {
         }
     }, [updateRequired, updateAccountState]);
 
+    let minimumNextDeposit = deposit ? minimumDeposit.sub(deposit.amount) : 0;
+
     let accountState = null;
     if (deposit && pendingReward) {
         accountState = (
@@ -70,6 +72,7 @@ const AccountState = ({ poolId, signer }) => {
             <Interactions
                 poolId={poolId}
                 signer={signer}
+                minimumNextDeposit={minimumNextDeposit}
                 updateAccountState={() => setUpdateRequired(true)}
             />
         </div>

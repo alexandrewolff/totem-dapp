@@ -1,8 +1,18 @@
 import { useState } from "react";
+import { ethers } from "ethers";
 
-import { getStakingContract, tryTransaction } from "../../../../../utils/utils";
+import {
+    getStakingContract,
+    tryTransaction,
+    displayInfo,
+} from "../../../../../utils/utils";
 
-const Interactions = ({ poolId, signer, updateAccountState }) => {
+const Interactions = ({
+    poolId,
+    signer,
+    minimumNextDeposit,
+    updateAccountState,
+}) => {
     const [depositAmount, setDepositAmount] = useState("");
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [info, setInfo] = useState("");
@@ -20,6 +30,13 @@ const Interactions = ({ poolId, signer, updateAccountState }) => {
     };
 
     const depositHandler = async () => {
+        if (ethers.BigNumber.from(depositAmount).lt(minimumNextDeposit)) {
+            return displayInfo(
+                setInfo,
+                "Deposit amount lower than minimum deposit"
+            );
+        }
+
         const stakingContract = getStakingContract(signer);
         await tryTransaction(
             () => stakingContract.deposit(poolId, depositAmount),

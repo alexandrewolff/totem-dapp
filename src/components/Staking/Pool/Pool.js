@@ -38,7 +38,11 @@ const Pool = ({
             />
             {account ? (
                 <div>
-                    <AccountState poolId={poolId} signer={signer} />
+                    <AccountState
+                        poolId={poolId}
+                        signer={signer}
+                        minimumDeposit={minimumDeposit}
+                    />
                 </div>
             ) : null}
         </div>
