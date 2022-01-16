@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import {
     getStakingContract,
     tryTransaction,
+    parseTokenAmount,
     displayInfo,
 } from "../../../../../utils/utils";
 
@@ -30,7 +31,8 @@ const Interactions = ({
     };
 
     const depositHandler = async () => {
-        if (ethers.BigNumber.from(depositAmount).lt(minimumNextDeposit)) {
+        const parsedDepositAmount = parseTokenAmount(depositAmount);
+        if (parsedDepositAmount.lt(minimumNextDeposit)) {
             return displayInfo(
                 setInfo,
                 "Deposit amount lower than minimum deposit"
@@ -39,7 +41,7 @@ const Interactions = ({
 
         const stakingContract = getStakingContract(signer);
         await tryTransaction(
-            () => stakingContract.deposit(poolId, depositAmount),
+            () => stakingContract.deposit(poolId, parsedDepositAmount),
             setInfo,
             "Tokens successfully deposited"
         );
@@ -48,7 +50,11 @@ const Interactions = ({
     const withdrawHandler = async () => {
         const stakingContract = getStakingContract(signer);
         await tryTransaction(
-            () => stakingContract.withdraw(poolId, withdrawAmount),
+            () =>
+                stakingContract.withdraw(
+                    poolId,
+                    parseTokenAmount(withdrawAmount)
+                ),
             setInfo,
             "Tokens successfully Withdrew"
         );
