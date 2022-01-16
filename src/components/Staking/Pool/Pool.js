@@ -22,6 +22,9 @@ const Pool = ({
 }) => {
     const { account } = useWeb3React();
 
+    const isPoolClosed =
+        lastRewardedBlock !== 0 ? lastRewardedBlock < currentBlock : false;
+
     // Multiply `lockTime` by 1000 to get ms for the library
     return (
         <div>
@@ -42,7 +45,7 @@ const Pool = ({
                         poolId={poolId}
                         signer={signer}
                         minimumDeposit={minimumDeposit}
-                        isPoolClosed={lastRewardedBlock > currentBlock}
+                        isPoolClosed={isPoolClosed}
                     />
                 </div>
             ) : null}

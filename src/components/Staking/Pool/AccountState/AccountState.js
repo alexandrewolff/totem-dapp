@@ -7,7 +7,7 @@ import Interactions from "./Interactions/Interactions";
 import { formatTokenAmount, getStakingContract } from "../../../../utils/utils";
 
 const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
-    const [deposit, setDeposit] = useState(null);
+    const [deposit, setDeposit] = useState(undefined);
     const [pendingReward, setPendingReward] = useState(undefined);
     const [updateRequired, setUpdateRequired] = useState(false);
 
@@ -46,6 +46,9 @@ const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
 
     let minimumNextDeposit = deposit ? minimumDeposit.sub(deposit.amount) : 0;
 
+    const secondsBeforeUnlock =
+        deposit && deposit.lockTimeEnd * 1000 - new Date().getTime();
+
     let accountState = null;
     if (deposit && pendingReward) {
         accountState = (
@@ -53,7 +56,7 @@ const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
                 <p>
                     Token staked: {formatTokenAmount(deposit.amount.toString())}
                 </p>
-                {deposit.amount.gt(0) ? (
+                {deposit.amount.gt(0) && secondsBeforeUnlock > 0 ? (
                     <p>
                         Unlocked in :{" "}
                         {humanizeDuration(
@@ -66,6 +69,12 @@ const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
         );
     }
 
+    const isTherePendingReward = pendingReward ? pendingReward.gt(0) : false;
+    const isThereWithdrawal = deposit
+        ? deposit.amount.gt(0) &&
+          deposit.lockTimeEnd * 1000 < new Date().getTime()
+        : false;
+
     return (
         <div>
             {accountState}
@@ -74,7 +83,8 @@ const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
                 signer={signer}
                 minimumNextDeposit={minimumNextDeposit}
                 isPoolClosed={isPoolClosed}
-                isTherePendingReward={pendingReward.gt(0)}
+                isTherePendingReward={isTherePendingReward}
+                isThereWithdrawal={isThereWithdrawal}
                 updateAccountState={() => setUpdateRequired(true)}
             />
         </div>
