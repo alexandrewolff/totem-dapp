@@ -13,6 +13,7 @@ const Interactions = ({
     signer,
     minimumNextDeposit,
     isPoolClosed,
+    isTherePendingReward,
     updateAccountState,
 }) => {
     const [depositAmount, setDepositAmount] = useState("");
@@ -93,7 +94,9 @@ const Interactions = ({
                 placeholder="0.0000"
             />
             <button onClick={withdrawHandler}>Withdraw</button>
-            <button onClick={harvestHandler}>Harvest</button>
+            {isTherePendingReward ? (
+                <button onClick={harvestHandler}>Harvest</button>
+            ) : null}
             {info ? <p>{info}</p> : null}
         </div>
     );

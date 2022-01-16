@@ -74,6 +74,7 @@ const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
                 signer={signer}
                 minimumNextDeposit={minimumNextDeposit}
                 isPoolClosed={isPoolClosed}
+                isTherePendingReward={pendingReward.gt(0)}
                 updateAccountState={() => setUpdateRequired(true)}
             />
         </div>
