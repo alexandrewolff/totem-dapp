@@ -45,6 +45,7 @@ const Interactions = ({
             setInfo,
             "Tokens successfully deposited"
         );
+        setDepositAmount("");
         updateAccountState();
     };
     const withdrawHandler = async () => {
@@ -58,6 +59,7 @@ const Interactions = ({
             setInfo,
             "Tokens successfully Withdrew"
         );
+        setWithdrawAmount("");
         updateAccountState();
     };
     const harvestHandler = async () => {
