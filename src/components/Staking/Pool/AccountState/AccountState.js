@@ -6,7 +6,7 @@ import Interactions from "./Interactions/Interactions";
 
 import { formatTokenAmount, getStakingContract } from "../../../../utils/utils";
 
-const AccountState = ({ poolId, signer, minimumDeposit }) => {
+const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
     const [deposit, setDeposit] = useState(null);
     const [pendingReward, setPendingReward] = useState(undefined);
     const [updateRequired, setUpdateRequired] = useState(false);
@@ -73,6 +73,7 @@ const AccountState = ({ poolId, signer, minimumDeposit }) => {
                 poolId={poolId}
                 signer={signer}
                 minimumNextDeposit={minimumNextDeposit}
+                isPoolClosed={isPoolClosed}
                 updateAccountState={() => setUpdateRequired(true)}
             />
         </div>

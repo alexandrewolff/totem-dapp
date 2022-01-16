@@ -12,6 +12,7 @@ const Interactions = ({
     poolId,
     signer,
     minimumNextDeposit,
+    isPoolClosed,
     updateAccountState,
 }) => {
     const [depositAmount, setDepositAmount] = useState("");
@@ -74,14 +75,17 @@ const Interactions = ({
 
     return (
         <div>
-            <input
-                name="deposit"
-                value={depositAmount}
-                onChange={valueChangeHandler}
-                placeholder="0.0000"
-            />
-
-            <button onClick={depositHandler}>Deposit</button>
+            {isPoolClosed ? (
+                <>
+                    <input
+                        name="deposit"
+                        value={depositAmount}
+                        onChange={valueChangeHandler}
+                        placeholder="0.0000"
+                    />
+                    <button onClick={depositHandler}>Deposit</button>
+                </>
+            ) : null}
             <input
                 name="withdraw"
                 value={withdrawAmount}

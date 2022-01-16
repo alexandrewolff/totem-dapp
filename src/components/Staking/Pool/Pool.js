@@ -42,6 +42,7 @@ const Pool = ({
                         poolId={poolId}
                         signer={signer}
                         minimumDeposit={minimumDeposit}
+                        isPoolClosed={lastRewardedBlock > currentBlock}
                     />
                 </div>
             ) : null}
