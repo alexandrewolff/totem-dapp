@@ -10,10 +10,11 @@
 -   @web3-react/walletconnect-connector 6.2.4
 -   ethers 5.4.7
 -   js-cookie 3.0.1
+-   humanize-duration 3.27.1
 
-### Copy configuration file
+### Copy configuration files
 
-Copy the config.json file at the root of your src file
+Copy the config.json, paymentTokens.json & poolTokens.json files at the root of your src file. Edit them with relevant values.
 
 ### Initialize the app for web3-react usage
 
@@ -27,4 +28,4 @@ As done in the App component, go to your root component and:
 
 ### Import the components and the utils folders in your project
 
-You might have to edit the import paths
+You might have to edit the import paths.
