@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ethers } from "ethers";
 
 import {
     getStakingContract,
@@ -13,13 +12,19 @@ const Interactions = ({
     signer,
     minimumNextDeposit,
     isPoolClosed,
-    isTherePendingReward,
-    isThereWithdrawal,
+    pendingReward,
+    deposit,
     updateAccountState,
 }) => {
     const [depositAmount, setDepositAmount] = useState("");
     const [withdrawAmount, setWithdrawAmount] = useState("");
     const [info, setInfo] = useState("");
+
+    const isTherePendingReward = pendingReward ? pendingReward.gt(0) : false;
+    const isThereWithdrawal = deposit
+        ? deposit.amount.gt(0) &&
+          deposit.lockTimeEnd * 1000 < new Date().getTime()
+        : false;
 
     const valueChangeHandler = ({ target }) => {
         const { name, value } = target;

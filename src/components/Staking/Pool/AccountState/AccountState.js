@@ -69,12 +69,6 @@ const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
         );
     }
 
-    const isTherePendingReward = pendingReward ? pendingReward.gt(0) : false;
-    const isThereWithdrawal = deposit
-        ? deposit.amount.gt(0) &&
-          deposit.lockTimeEnd * 1000 < new Date().getTime()
-        : false;
-
     return (
         <div>
             {accountState}
@@ -83,8 +77,8 @@ const AccountState = ({ poolId, signer, minimumDeposit, isPoolClosed }) => {
                 signer={signer}
                 minimumNextDeposit={minimumNextDeposit}
                 isPoolClosed={isPoolClosed}
-                isTherePendingReward={isTherePendingReward}
-                isThereWithdrawal={isThereWithdrawal}
+                pendingReward={pendingReward}
+                deposit={deposit}
                 updateAccountState={() => setUpdateRequired(true)}
             />
         </div>
