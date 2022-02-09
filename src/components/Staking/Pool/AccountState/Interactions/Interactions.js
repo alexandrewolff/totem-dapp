@@ -1,115 +1,127 @@
-import { useState } from "react";
+import { useState } from 'react';
+import { ethers } from 'ethers';
 
 import {
-    getStakingContract,
-    tryTransaction,
-    parseTokenAmount,
-    displayInfo,
-} from "../../../../../utils/utils";
+  getStakingContract,
+  getErc20Contract,
+  tryTransaction,
+  parseTokenAmount,
+  displayInfo,
+} from '../../../../../utils/utils';
+
+import config from '../../../../../config.json';
 
 const Interactions = ({
-    poolId,
-    signer,
-    minimumNextDeposit,
-    isPoolClosed,
-    pendingReward,
-    deposit,
-    updateAccountState,
+  poolId,
+  token,
+  signer,
+  minimumNextDeposit,
+  isPoolClosed,
+  pendingReward,
+  deposit,
+  updateAccountState,
 }) => {
-    const [depositAmount, setDepositAmount] = useState("");
-    const [withdrawAmount, setWithdrawAmount] = useState("");
-    const [info, setInfo] = useState("");
+  const [depositAmount, setDepositAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [info, setInfo] = useState('');
 
-    const isTherePendingReward = pendingReward ? pendingReward.gt(0) : false;
-    const isThereWithdrawal = deposit
-        ? deposit.amount.gt(0) &&
-          deposit.lockTimeEnd * 1000 < new Date().getTime()
-        : false;
+  const isTherePendingReward = pendingReward ? pendingReward.gt(0) : false;
+  const isThereWithdrawal = deposit
+    ? deposit.amount.gt(0) && deposit.lockTimeEnd * 1000 < new Date().getTime()
+    : false;
 
-    const valueChangeHandler = ({ target }) => {
-        const { name, value } = target;
-        switch (name) {
-            case "deposit":
-                setDepositAmount(value);
-                break;
-            case "withdraw":
-                setWithdrawAmount(value);
-                break;
-        }
-    };
+  const valueChangeHandler = ({ target }) => {
+    const { name, value } = target;
+    switch (name) {
+      case 'deposit':
+        setDepositAmount(value);
+        break;
+      case 'withdraw':
+        setWithdrawAmount(value);
+        break;
+    }
+  };
 
-    const depositHandler = async () => {
-        const parsedDepositAmount = parseTokenAmount(depositAmount);
-        if (parsedDepositAmount.lt(minimumNextDeposit)) {
-            return displayInfo(
-                setInfo,
-                "Deposit amount lower than minimum deposit"
-            );
-        }
-
-        const stakingContract = getStakingContract(signer);
-        await tryTransaction(
-            () => stakingContract.deposit(poolId, parsedDepositAmount),
-            setInfo,
-            "Tokens successfully deposited"
-        );
-        setDepositAmount("");
-        updateAccountState();
-    };
-    const withdrawHandler = async () => {
-        const stakingContract = getStakingContract(signer);
-        await tryTransaction(
-            () =>
-                stakingContract.withdraw(
-                    poolId,
-                    parseTokenAmount(withdrawAmount)
-                ),
-            setInfo,
-            "Tokens successfully Withdrew"
-        );
-        setWithdrawAmount("");
-        updateAccountState();
-    };
-    const harvestHandler = async () => {
-        const stakingContract = getStakingContract(signer);
-        await tryTransaction(
-            () => stakingContract.harvest(poolId),
-            setInfo,
-            "Reward successfully harvested"
-        );
-        updateAccountState();
-    };
-
-    return (
-        <div>
-            {isPoolClosed ? null : (
-                <>
-                    <input
-                        name="deposit"
-                        value={depositAmount}
-                        onChange={valueChangeHandler}
-                        placeholder="0.0000"
-                    />
-                    <button onClick={depositHandler}>Deposit</button>
-                </>
-            )}
-            {isThereWithdrawal ? (
-                <>
-                    <input
-                        name="withdraw"
-                        value={withdrawAmount}
-                        onChange={valueChangeHandler}
-                        placeholder="0.0000"
-                    />
-                    <button onClick={withdrawHandler}>Withdraw</button>
-                </>
-            ) : null}
-            {isTherePendingReward ? (
-                <button onClick={harvestHandler}>Harvest</button>
-            ) : null}
-            {info ? <p>{info}</p> : null}
-        </div>
+  const approveHandler = async () => {
+    const tokenContract = getErc20Contract(token, signer);
+    await tryTransaction(
+      () =>
+        tokenContract.approve(
+          config.stakingAddress,
+          ethers.constants.MaxUint256
+        ),
+      setInfo,
+      'Tokens successfully approved'
     );
+  };
+
+  const depositHandler = async () => {
+    const parsedDepositAmount = parseTokenAmount(depositAmount);
+    if (parsedDepositAmount.lt(minimumNextDeposit)) {
+      return displayInfo(setInfo, 'Deposit amount lower than minimum deposit');
+    }
+
+    const stakingContract = getStakingContract(signer);
+    await tryTransaction(
+      () => stakingContract.deposit(poolId, parsedDepositAmount),
+      setInfo,
+      'Tokens successfully deposited'
+    );
+    setDepositAmount('');
+    updateAccountState();
+  };
+
+  const withdrawHandler = async () => {
+    const stakingContract = getStakingContract(signer);
+    await tryTransaction(
+      () => stakingContract.withdraw(poolId, parseTokenAmount(withdrawAmount)),
+      setInfo,
+      'Tokens successfully Withdrew'
+    );
+    setWithdrawAmount('');
+    updateAccountState();
+  };
+  const harvestHandler = async () => {
+    const stakingContract = getStakingContract(signer);
+    await tryTransaction(
+      () => stakingContract.harvest(poolId),
+      setInfo,
+      'Reward successfully harvested'
+    );
+    updateAccountState();
+  };
+
+  return (
+    <div>
+      {isPoolClosed ? null : (
+        <>
+          <button onClick={approveHandler}>Approve</button>
+          <input
+            name="deposit"
+            value={depositAmount}
+            onChange={valueChangeHandler}
+            placeholder="0.0000"
+          />
+          <button onClick={depositHandler}>Deposit</button>
+        </>
+      )}
+      {isThereWithdrawal ? (
+        <>
+          <input
+            name="withdraw"
+            value={withdrawAmount}
+            onChange={valueChangeHandler}
+            placeholder="0.0000"
+          />
+          <button onClick={withdrawHandler}>Withdraw</button>
+        </>
+      ) : null}
+      {isTherePendingReward ? (
+        <button onClick={harvestHandler}>Harvest</button>
+      ) : null}
+      {info ? <p>{info}</p> : null}
+    </div>
+  );
 };
 
 export default Interactions;
