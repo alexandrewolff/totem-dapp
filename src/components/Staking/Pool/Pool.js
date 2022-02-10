@@ -41,8 +41,6 @@ const Pool = ({
   const isPoolClosed =
     lastRewardedBlock !== 0 ? lastRewardedBlock < currentBlock : false;
   const apr = computeApr(amountPerReward.toNumber(), rewardPerBlock);
-  console.log(poolId);
-  console.log('apr', apr);
 
   // Multiply `lockTime` by 1000 to get ms for the library
   return (

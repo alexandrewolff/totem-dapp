@@ -1,11 +1,11 @@
 {
-    "mainnet": {},
-    "testnet": {
-        "0xBEc5cabb55d3b4E806d3A7669691e5C54Dd40842": "Token 1",
-        "0xE5a13FE650F19ECF146a23B1E5F583A544AAe687": "Token 2",
-        "0xB7CDd3bdcA857856E653F66167d8642C2165502b": "Token 3",
-        "0x640425295cC69d2f4Cc51bADb8C102143F49A9bd": "Token 4",
-        "0xF2b2dc3f43bc23f8ABfD6ef8F3eE2CdAAcC7822E": "Token 5",
-        "0x3B435e76AfC88408a89C1932D4830c6944701a9A": "Token 6"
-    }
+  "mainnet": {},
+  "testnet": {
+    "0xBEc5cabb55d3b4E806d3A7669691e5C54Dd40842": "Token 1",
+    "0xE5a13FE650F19ECF146a23B1E5F583A544AAe687": "Token 2",
+    "0xB7CDd3bdcA857856E653F66167d8642C2165502b": "Token 3",
+    "0x640425295cC69d2f4Cc51bADb8C102143F49A9bd": "Token 4",
+    "0xF2b2dc3f43bc23f8ABfD6ef8F3eE2CdAAcC7822E": "Token 5",
+    "0xB1ECdf22a67a26c4C3B167B3dcA228216a59d4c2": "Token 6"
+  }
 }

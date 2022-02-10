@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useWeb3React } from '@web3-react/core';
 import { ethers } from 'ethers';
 
 import {
   getStakingContract,
   getErc20Contract,
+  tryReadTx,
   tryTransaction,
   parseTokenAmount,
   displayInfo,
@@ -21,14 +23,34 @@ const Interactions = ({
   deposit,
   updateAccountState,
 }) => {
+  const [approved, setApproved] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [info, setInfo] = useState('');
+
+  const { account, library: provider } = useWeb3React();
 
   const isTherePendingReward = pendingReward ? pendingReward.gt(0) : false;
   const isThereWithdrawal = deposit
     ? deposit.amount.gt(0) && deposit.lockTimeEnd * 1000 < new Date().getTime()
     : false;
+
+  const fetchAllowance = useCallback(async () => {
+    const tokenContract = getErc20Contract(token, provider);
+    const allowance = await tryReadTx(
+      async () => tokenContract.allowance(account, config.stakingAddress),
+      setInfo
+    );
+    if (!allowance) {
+      console.log('Problem', token, allowance);
+      return;
+    }
+    setApproved(allowance.gt(0));
+  }, [token, account, provider]);
+
+  useEffect(() => {
+    fetchAllowance();
+  }, [fetchAllowance]);
 
   const valueChangeHandler = ({ target }) => {
     const { name, value } = target;
@@ -53,6 +75,7 @@ const Interactions = ({
       setInfo,
       'Tokens successfully approved'
     );
+    fetchAllowance();
   };
 
   const depositHandler = async () => {
@@ -81,6 +104,7 @@ const Interactions = ({
     setWithdrawAmount('');
     updateAccountState();
   };
+
   const harvestHandler = async () => {
     const stakingContract = getStakingContract(signer);
     await tryTransaction(
@@ -91,37 +115,43 @@ const Interactions = ({
     updateAccountState();
   };
 
-  return (
-    <div>
-      {isPoolClosed ? null : (
-        <>
-          <button onClick={approveHandler}>Approve</button>
-          <input
-            name="deposit"
-            value={depositAmount}
-            onChange={valueChangeHandler}
-            placeholder="0.0000"
-          />
-          <button onClick={depositHandler}>Deposit</button>
-        </>
-      )}
-      {isThereWithdrawal ? (
-        <>
-          <input
-            name="withdraw"
-            value={withdrawAmount}
-            onChange={valueChangeHandler}
-            placeholder="0.0000"
-          />
-          <button onClick={withdrawHandler}>Withdraw</button>
-        </>
-      ) : null}
-      {isTherePendingReward ? (
-        <button onClick={harvestHandler}>Harvest</button>
-      ) : null}
-      {info ? <p>{info}</p> : null}
-    </div>
-  );
+  let display;
+  if (!approved) {
+    display = <button onClick={approveHandler}>Approve</button>;
+  } else {
+    display = (
+      <div>
+        {isPoolClosed ? null : (
+          <>
+            <input
+              name="deposit"
+              value={depositAmount}
+              onChange={valueChangeHandler}
+              placeholder="0.0000"
+            />
+            <button onClick={depositHandler}>Deposit</button>
+          </>
+        )}
+        {isThereWithdrawal ? (
+          <>
+            <input
+              name="withdraw"
+              value={withdrawAmount}
+              onChange={valueChangeHandler}
+              placeholder="0.0000"
+            />
+            <button onClick={withdrawHandler}>Withdraw</button>
+          </>
+        ) : null}
+        {isTherePendingReward ? (
+          <button onClick={harvestHandler}>Harvest</button>
+        ) : null}
+        {info ? <p>{info}</p> : null}
+      </div>
+    );
+  }
+
+  return display;
 };
 
 export default Interactions;
